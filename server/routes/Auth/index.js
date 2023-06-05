@@ -1,6 +1,7 @@
 const router = require('express').Router()
 
 
+
 // Home page route.
 router.get("/signUp", function (req, res) {
     res.send("SignUp route");
@@ -10,6 +11,7 @@ router.get("/signUp", function (req, res) {
 router.get("/signIn", function (req, res) {
     res.send("SignIn route");
 });
+
 // my profile route
 router.get("/myProfile", function (req, res) {
     res.send("myProfile Route");
