@@ -1,20 +1,39 @@
+"use strict"
 module.exports = (sequelize, Sequelize) => {
-    const Tutorial = sequelize.define("users", {
+    const User = sequelize.define("users", {
         id: {
             type: Sequelize.INTEGER(11),
-            primaryKey: true
+            primaryKey: true,
+            allowNull: false,
+            autoIncrement: true
         },
         userName: {
-            type: Sequelize.STRING(100)
+            type: Sequelize.STRING(100),
+            allowNull: false,
+            unique: true
+        },
+        email: {
+            type: Sequelize.STRING(50),
+            allowNull: false,
+            unique: true
         },
         password: {
-            type: Sequelize.BOOLEAN
+            type: Sequelize.STRING(100),
+            allowNull: false
+        },
+        image: {
+            type: Sequelize.STRING(500),
+            allowNull: true
         },
         enable: {
-            type: Sequelize.BOOLEAN
+            type: Sequelize.BOOLEAN,
+            allowNull: false,
+            defaultValue: true
         },
         deleted: {
-            type: Sequelize.BOOLEAN
+            type: Sequelize.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
         }
     }, {
         timestamps: true,
@@ -23,5 +42,5 @@ module.exports = (sequelize, Sequelize) => {
         underscored: true
     });
 
-    return Tutorial;
+    return User;
 };
