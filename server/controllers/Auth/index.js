@@ -2,60 +2,27 @@ const { UserModel, UsersTokensModel, RoleModel } = require('../../models')
 const { Op } = require('../../config').Sequelize
 const { compareSync } = require('bcrypt')
 const { sequelize } = require('../../config')
-const { sign } = require('jsonwebtoken')
 
+const { getByUserNameOrEmail, findUserToken, generateJWT } = require('../../services/auth.service')
 async function signIn(req, res, next) {
     try {
         const { email, password } = req.body
-        const user = await UserModel.findOne({
-            where: {
-                [Op.or]: [
-                    { email: email },
-                    { userName: email }
-                ],
-                deleted: false
-            },
-            include: [
-                {
-                    model: RoleModel,
-                    attributes: ['name', 'id'],
-                }
-            ]
-        })
-        if (!user) {
-            return res.status(401).json({ error: 'User not found' })
+        const user = await getByUserNameOrEmail(email)
+        if (user === 'disabled') {
+            return res.status(401).json({ error: 'User Is Disabled' })
+        }
+        if (user === null) {
+            return res.status(401).json({ error: 'User Not Found' })
         }
         const isPasswordValid = compareSync(password, user.dataValues.password)
 
         if (!isPasswordValid) {
             return res.status(401).json({ error: 'Invalid password' })
         }
-        const exist = await UsersTokensModel.findOne(
-            {
-                where: {
-                    userId: user.dataValues.id,
-                },
-                raw: true
-            }
-        );
+        const exist = await findUserToken(user.dataValues.id)
 
         let token = exist && exist.token || null
-        if (!token) {
-            token = sign(
-                {
-                    id: user.id,
-                },
-                process.env.JWT_SECRET
-            );
-
-            await UsersTokensModel.create(
-                {
-                    userName: user.dataValues.userName,
-                    userId: user.dataValues.id,
-                    token
-                }
-            );
-        }
+        if (!token) await saveJWT(user.dataValues.userName, user.dataValues.id, generateJWT(user.dataValues.id))
         return res.status(200).json({
             token, user: {
                 id: user.id,
@@ -102,10 +69,8 @@ const create = async (req, res, next) => {
 };
 const myProfile = async (req, res, next) => {
     try {
-        
         return res.status(200).json(req.currentUser)
     } catch (error) {
-        console.log(error)
         next(error)
     }
 }

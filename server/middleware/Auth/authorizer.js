@@ -5,7 +5,6 @@ const jwt = require('jsonwebtoken');
 const authSecret = process.env.AUTH_SECRET || "6472090aa02359fc74511149"
 const authorizer = async (req, res, next) => {
     try {
-        console.log(req.body)
         const authToken = req.headers.Authorization || req.headers.authorization;
         if (!authToken)
             return res.status(401).json({
@@ -62,6 +61,7 @@ const handleBearer = async ({ token, req, res, next }) => {
                         "enable",
                         "deleted"
                     ],
+                    where: { deleted: false },
                     include: [
                         {
                             model: RoleModel,
@@ -80,8 +80,6 @@ const handleBearer = async ({ token, req, res, next }) => {
             ],
         });
         if (!isTokenExist) next(new Error("Unverified Token Found in Request"));
-        if (!isTokenExist.user.enable || isTokenExist.user.deleted)
-            next(new Error("User is not enabled"))
         jwt.verify(token, process.env.JWT_SECRET);
         req.currentUser = isTokenExist.user
         next()
