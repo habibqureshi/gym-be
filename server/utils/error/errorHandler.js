@@ -1,6 +1,5 @@
 module.exports = (error, req, res, next) => {
     try {
-        console.log(Object.keys(error))
         console.log(`Error Message: ${error.message}`)
         console.log(`Error Name: ${error.name}`)
         switch (error.name) {

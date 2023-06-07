@@ -17,8 +17,8 @@ UserModel.belongsToMany(RoleModel, {
     foreignKey: "user_id",
     timestamps: false,
 });
-BookingsModel.belongsTo(UserModel, { foreignKey: "coach_id" })
-BookingsModel.belongsTo(UserModel, { foreignKey: "gymnast_id" })
+BookingsModel.belongsTo(UserModel, { as: 'coach', foreignKey: "coach_id" })
+BookingsModel.belongsTo(UserModel, { as: 'gymnast', foreignKey: "gymnast_id" })
 UsersTokensModel.belongsTo(UserModel, { foreignKey: "user_id" })
 PermissionModel.belongsToMany(RoleModel, {
     through: "role_permissions",
