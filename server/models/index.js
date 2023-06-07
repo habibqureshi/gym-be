@@ -1,66 +1,46 @@
-'use strict';
+const { sequelize, Sequelize } = require("./../config");
 
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const process = require('process');
-const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.json')[env];
-const db = {};
 
-let sequelize;
-if (config.use_env_variable) {
-    sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-    sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
-
-fs
-    .readdirSync(__dirname)
-    .filter(file => {
-        return (
-            file.indexOf('.') !== 0 &&
-            file !== basename &&
-            file.slice(-3) === '.js' &&
-            file.indexOf('.test.js') === -1
-        );
-    })
-    .forEach(file => {
-        const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-        db[model.name] = model;
-    });
-
-Object.keys(db).forEach(modelName => {
-    if (db[modelName].associate) {
-        db[modelName].associate(db);
-    }
+// Initialize Models
+const UserModel = require('./users')(sequelize, Sequelize);
+const UsersTokensModel = require('./user_tokens')(sequelize, Sequelize);
+const BasicTokensModel = require('./basic_tokens')(sequelize, Sequelize);
+const RoleModel = require('./role')(sequelize, Sequelize);
+const PermissionModel = require('./permission')(sequelize, Sequelize);
+const BookingsModel = require('./bookings')(sequelize, Sequelize);
+// Add associations
+UserModel.hasMany(UsersTokensModel, { foreignKey: "user_id" })
+UserModel.hasMany(BookingsModel, { foreignKey: "gymnast_id" })
+UserModel.hasMany(BookingsModel, { foreignKey: "coach_id" })
+UserModel.belongsToMany(RoleModel, {
+    through: "user_roles",
+    foreignKey: "user_id",
+    timestamps: false,
 });
-
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
-
-module.exports = db;
-// import dbConfig from "../config/db.config"
-
-// const Sequelize = require("sequelize");
-// const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
-//     host: dbConfig.HOST,
-//     dialect: dbConfig.dialect,
-//     operatorsAliases: false,
-//     pool: {
-//         max: dbConfig.pool.max,
-//         min: dbConfig.pool.min,
-//         acquire: dbConfig.pool.acquire,
-//         idle: dbConfig.pool.idle
-//     }
-// });
-
-// const db = {};
-
-// db.Sequelize = Sequelize;
-// db.sequelize = sequelize;
-
-// db.tutorials = require("./tutorial.model.js")(sequelize, Sequelize);
-
-// module.exports = db;
+BookingsModel.belongsTo(UserModel, { foreignKey: "coach_id" })
+BookingsModel.belongsTo(UserModel, { foreignKey: "gymnast_id" })
+UsersTokensModel.belongsTo(UserModel, { foreignKey: "user_id" })
+PermissionModel.belongsToMany(RoleModel, {
+    through: "role_permissions",
+    foreignKey: "permissionId",
+});
+RoleModel.belongsToMany(PermissionModel, {
+    through: "role_permissions",
+    foreignKey: "role_id",
+});
+UserModel.belongsToMany(RoleModel, {
+    through: "user_roles",
+    foreignKey: "user_id",
+    timestamps: false,
+});
+sequelize.sync().then(() => {
+    console.log('Database Synchronized')
+})
+module.exports = {
+    UserModel,
+    UsersTokensModel,
+    BasicTokensModel,
+    RoleModel,
+    PermissionModel,
+    BookingsModel
+};

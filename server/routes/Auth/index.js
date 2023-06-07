@@ -1,18 +1,14 @@
 const router = require('express').Router()
-
+const authController = require('../../controllers/Auth')
+const { signUpValidator, signInValidator } = require('../../utils/validators/validators')
 
 // Home page route.
-router.get("/signUp", function (req, res) {
-    res.send("SignUp route");
-});
+router.post("/signUp", signUpValidator(), authController.create);
 
 // About page route.
-router.get("/signIn", function (req, res) {
-    res.send("SignIn route");
-});
+router.post("/signIn", signInValidator(), authController.signIn);
+
 // my profile route
-router.get("/myProfile", function (req, res) {
-    res.send("myProfile Route");
-});
+router.get("/myProfile", authController.myProfile);
 
 module.exports = router
