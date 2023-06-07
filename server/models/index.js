@@ -1,21 +1,46 @@
 const { sequelize, Sequelize } = require("./../config");
 
-const User = require('./users')
-const UsersTokens = require('./user_tokens')
-const BasicTokens = require('./basic_tokens')
 
-const UserModel = User(sequelize, Sequelize);
-const UsersTokensModel = UsersTokens(sequelize, Sequelize);
-const BasicTokensModel = BasicTokens(sequelize, Sequelize);
-
+// Initialize Models
+const UserModel = require('./users')(sequelize, Sequelize);
+const UsersTokensModel = require('./user_tokens')(sequelize, Sequelize);
+const BasicTokensModel = require('./basic_tokens')(sequelize, Sequelize);
+const RoleModel = require('./role')(sequelize, Sequelize);
+const PermissionModel = require('./permission')(sequelize, Sequelize);
+const BookingsModel = require('./bookings')(sequelize, Sequelize);
+// Add associations
 UserModel.hasMany(UsersTokensModel, { foreignKey: "user_id" })
+UserModel.hasMany(BookingsModel, { foreignKey: "gymnast_id" })
+UserModel.hasMany(BookingsModel, { foreignKey: "coach_id" })
+UserModel.belongsToMany(RoleModel, {
+    through: "user_roles",
+    foreignKey: "user_id",
+    timestamps: false,
+});
+BookingsModel.belongsTo(UserModel, { foreignKey: "coach_id" })
+BookingsModel.belongsTo(UserModel, { foreignKey: "gymnast_id" })
 UsersTokensModel.belongsTo(UserModel, { foreignKey: "user_id" })
-
-sequelize.sync().then(res => {
+PermissionModel.belongsToMany(RoleModel, {
+    through: "role_permissions",
+    foreignKey: "permissionId",
+});
+RoleModel.belongsToMany(PermissionModel, {
+    through: "role_permissions",
+    foreignKey: "role_id",
+});
+UserModel.belongsToMany(RoleModel, {
+    through: "user_roles",
+    foreignKey: "user_id",
+    timestamps: false,
+});
+sequelize.sync().then(() => {
     console.log('Database Synchronized')
 })
 module.exports = {
     UserModel,
     UsersTokensModel,
-    BasicTokensModel
+    BasicTokensModel,
+    RoleModel,
+    PermissionModel,
+    BookingsModel
 };

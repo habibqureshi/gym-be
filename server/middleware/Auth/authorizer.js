@@ -1,4 +1,4 @@
-const { BasicTokensModel, UsersTokensModel, UserModel } = require('../../models');
+const { BasicTokensModel, UsersTokensModel, UserModel, RoleModel, PermissionModel } = require('../../models');
 
 const { compareSync } = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -15,7 +15,7 @@ const authorizer = async (req, res, next) => {
         if (token[0].trim() === "Basic") {
             return await handleAuthRoutes({ token: token[1].trim(), req, res, next });
         } else if (token[0] === "Bearer")
-            return await handleBearer({ token: token[1].trim(), req, res });
+            return await handleBearer({ token: token[1].trim(), req, res, next });
         else return res.status(401).json({
             message: "UnAuthorization",
         });
@@ -45,24 +45,45 @@ const handleAuthRoutes = async ({ token, req, res, next }) => {
     }
     next()
 };
-const handleBearer = async ({ token, req, res }) => {
+const handleBearer = async ({ token, req, res, next }) => {
     try {
         const isTokenExist = await UsersTokensModel.findOne({
-            where: {
-                token: token
-            },
+            where: { token },
             include: [
                 {
                     model: UserModel,
                     as: "user",
-                    attributes: ["name", "userName", "password", "email"]
-                }
-            ]
-        })
+                    attributes: [
+                        "id",
+                        "userName",
+                        "firstName",
+                        "lastName",
+                        "email",
+                        "enable",
+                        "deleted"
+                    ],
+                    include: [
+                        {
+                            model: RoleModel,
+                            as: "roles",
+                            attributes: ["id", "name"],
+                            include: [
+                                {
+                                    model: PermissionModel,
+                                    attributes: ["id", "name", "api"],
+                                    as: "permissions",
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
         if (!isTokenExist) next(new Error("Unverified Token Found in Request"));
         if (!isTokenExist.user.enable || isTokenExist.user.deleted)
             next(new Error("User is not enabled"))
-        req.currentUser = jwt.verify(token, authSecret);
+        jwt.verify(token, process.env.JWT_SECRET);
+        req.currentUser = isTokenExist.user
         next()
     } catch (error) {
         if (error == 'jwt expired') {
