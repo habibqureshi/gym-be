@@ -3,7 +3,7 @@ const { Op } = require('../../config').Sequelize
 const { compareSync } = require('bcrypt')
 const { sequelize } = require('../../config')
 
-const { getByUserNameOrEmail, findUserToken, generateJWT } = require('../../services/auth.service')
+const { getByUserNameOrEmail, findUserToken, generateJWT, saveJWT } = require('../../services/auth.service')
 async function signIn(req, res, next) {
     try {
         const { email, password } = req.body
@@ -22,9 +22,13 @@ async function signIn(req, res, next) {
         const exist = await findUserToken(user.dataValues.id)
 
         let token = exist && exist.token || null
-        if (!token) await saveJWT(user.dataValues.userName, user.dataValues.id, generateJWT(user.dataValues.id))
+        if (!token) {
+            token = generateJWT(user.dataValues.id)
+            await saveJWT(user.dataValues.userName, user.dataValues.id, token)
+        }
         return res.status(200).json({
-            token, user: {
+            token,
+            user: {
                 id: user.id,
                 firstName: user.firstName,
                 lastName: user.lastName,

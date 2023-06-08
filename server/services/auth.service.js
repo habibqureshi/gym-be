@@ -1,4 +1,4 @@
-const { UserModel, UsersTokensModel, RoleModel } = require('../models')
+const { UserModel, UsersTokensModel, RoleModel, PermissionModel } = require('../models')
 const { Op } = require('../config').Sequelize
 const { sign } = require('jsonwebtoken')
 const getByUserNameOrEmail = async (email) => {
@@ -33,9 +33,54 @@ const findUserToken = async (userId) => await UsersTokensModel.findOne(
         raw: true
     }
 );
-
+const getUserDetailsByToken = async (token) => {
+    return await UsersTokensModel.findOne({
+        where: { token },
+        include: [
+            {
+                model: UserModel,
+                as: "user",
+                attributes: [
+                    "id",
+                    "userName",
+                    "firstName",
+                    "lastName",
+                    "email",
+                    "enable",
+                    "deleted"
+                ],
+                include: [
+                    {
+                        model: RoleModel,
+                        as: "roles",
+                        where: { deleted: false },
+                        attributes: ["id", "name"],
+                        include: [
+                            {
+                                model: PermissionModel,
+                                attributes: ["id", "name", "api"],
+                                as: "permissions",
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+    });
+}
 const generateJWT = (id) => sign({ id }, process.env.JWT_SECRET)
 
 const saveJWT = async (userName, userId, token) => await UsersTokensModel.create({ userName, userId, token })
 
-module.exports = { getByUserNameOrEmail, findUserToken, generateJWT, saveJWT }
+const allowedToAccessResource = (user, requestedResource) => {
+
+    return user.roles.reduce((result, role) => {
+        role.dataValues.permissions.forEach(permission => {
+            if (permission.dataValues.api === requestedResource)
+                result = true
+        })
+        return result
+    }, false)
+}
+
+module.exports = { getByUserNameOrEmail, findUserToken, generateJWT, saveJWT, getUserDetailsByToken }

@@ -1,14 +1,15 @@
-const { BasicTokensModel, UsersTokensModel, UserModel, RoleModel, PermissionModel } = require('../../models');
+const { BasicTokensModel, UsersTokensModel, UserModel, RoleModel } = require('../../models');
 
 const { compareSync } = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { getUserDetailsByToken } = require('../../services/auth.service');
 const authSecret = process.env.AUTH_SECRET || "6472090aa02359fc74511149"
 const authorizer = async (req, res, next) => {
     try {
         const authToken = req.headers.Authorization || req.headers.authorization;
         if (!authToken)
             return res.status(401).json({
-                message: "Authorization Token Not Found",
+                message: "Authentication Token Not Found",
             });
         const token = authToken.split(" ");
         if (token[0].trim() === "Basic") {
@@ -16,7 +17,7 @@ const authorizer = async (req, res, next) => {
         } else if (token[0] === "Bearer")
             return await handleBearer({ token: token[1].trim(), req, res, next });
         else return res.status(401).json({
-            message: "UnAuthorization",
+            message: "Unauthorized",
         });
     } catch (error) {
         next(error)
@@ -46,42 +47,18 @@ const handleAuthRoutes = async ({ token, req, res, next }) => {
 };
 const handleBearer = async ({ token, req, res, next }) => {
     try {
-        const isTokenExist = await UsersTokensModel.findOne({
-            where: { token },
-            include: [
-                {
-                    model: UserModel,
-                    as: "user",
-                    attributes: [
-                        "id",
-                        "userName",
-                        "firstName",
-                        "lastName",
-                        "email",
-                        "enable",
-                        "deleted"
-                    ],
-                    where: { deleted: false },
-                    include: [
-                        {
-                            model: RoleModel,
-                            as: "roles",
-                            attributes: ["id", "name"],
-                            include: [
-                                {
-                                    model: PermissionModel,
-                                    attributes: ["id", "name", "api"],
-                                    as: "permissions",
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        });
+        const isTokenExist = await getUserDetailsByToken(token);
         if (!isTokenExist) next(new Error("Unverified Token Found in Request"));
+        const { user } = isTokenExist
         jwt.verify(token, process.env.JWT_SECRET);
-        req.currentUser = isTokenExist.user
+        const requestedResource = `${req.method}:/${req.originalUrl.split('api/')[1].split('?')[0]}`
+        const isAllowed = allowedToAccessResource(user, requestedResource)
+        if (!isAllowed) {
+            return res.status(401).json({
+                message: "Not authorized to access this resource"
+            })
+        }
+        req.currentUser = user
         next()
     } catch (error) {
         if (error == 'jwt expired') {

@@ -11,7 +11,7 @@ const sequelize = new Sequelize(
         pool: {
             ...config.pool
         },
-        logging: true,
+        logging: console.log,
     }
 )
 module.exports = {

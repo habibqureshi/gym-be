@@ -102,7 +102,10 @@ const createBooking = async (req, res, next) => {
 const deleteBooking = async (req, res, next) => {
     try {
         const { currentUser } = req
-        const { id } = req.params
+        const { id } = req.query
+        if (!id) {
+            return res.status(400).json({ message: "Invalid Record Id" })
+        }
         const booking = await getBookingById(id)
         if (booking === null) {
             return res.status(400).json({ message: "Booking Not Found" })

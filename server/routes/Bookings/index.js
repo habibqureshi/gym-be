@@ -4,6 +4,6 @@ const { myBookings, createBooking, deleteBooking } = require('../../controllers/
 router.get('/', myBookings)
 router.post('/', createBooking)
 // router.put('/:id', myBookings)
-router.delete('/:id', deleteBooking)
+router.delete('/', deleteBooking)
 
 module.exports = router
