@@ -33,9 +33,9 @@ UserModel.belongsToMany(RoleModel, {
     foreignKey: "user_id",
     timestamps: false,
 });
-sequelize.sync().then(() => {
-    console.log('Database Synchronized')
-})
+// sequelize.sync().then(() => {
+//     console.log('Database Synchronized')
+// })
 module.exports = {
     UserModel,
     UsersTokensModel,

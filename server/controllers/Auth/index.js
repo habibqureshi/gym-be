@@ -1,9 +1,12 @@
-const { UserModel, UsersTokensModel, RoleModel } = require('../../models')
-const { Op } = require('../../config').Sequelize
 const { compareSync } = require('bcrypt')
 const { sequelize } = require('../../config')
-
-const { getByUserNameOrEmail, findUserToken, generateJWT, saveJWT } = require('../../services/auth.service')
+const { getByUserNameOrEmail,
+    findUserToken,
+    generateJWT,
+    saveJWT,
+    getAllROles,
+    createUser
+} = require('../../services/auth.service')
 async function signIn(req, res, next) {
     try {
         const { email, password } = req.body
@@ -15,7 +18,6 @@ async function signIn(req, res, next) {
             return res.status(401).json({ error: 'User Not Found' })
         }
         const isPasswordValid = compareSync(password, user.dataValues.password)
-
         if (!isPasswordValid) {
             return res.status(401).json({ error: 'Invalid password' })
         }
@@ -46,13 +48,8 @@ const create = async (req, res, next) => {
     try {
         let { userName, email, password, firstName, lastName, roles } = req.body
         const transaction = await sequelize.transaction(async (t) => {
-            const newUser = await UserModel.create({ userName, email, password, firstName, lastName });
-            const savedRoles = await RoleModel.findAll({
-                where: {
-                    name: { [Op.in]: roles },
-                    deleted: false
-                }
-            })
+            const newUser = await createUser({ userName, email, password, firstName, lastName });
+            const savedRoles = await getAllROles()
             if (roles) assignedRoles = await newUser.setRoles(savedRoles.map(item => item.dataValues.id))
             return {
                 id: newUser.id,
