@@ -2,8 +2,7 @@ const { BasicTokensModel, UsersTokensModel, UserModel, RoleModel } = require('..
 
 const { compareSync } = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { getUserDetailsByToken, allowedToAccessResource } = require('../../services/auth.service');
-const authSecret = process.env.AUTH_SECRET || "6472090aa02359fc74511149"
+const { getUserDetailsByToken, allowedToAccessResource, getBasicTokenByClientId } = require('../../services/auth.service');
 const authorizer = async (req, res, next) => {
     try {
         const authToken = req.headers.Authorization || req.headers.authorization;
@@ -29,9 +28,7 @@ const handleAuthRoutes = async ({ token, req, res, next }) => {
     const usernamePassword = decodedToken.split(":");
     if (usernamePassword.length !== 2) throw Error("unauthorized");
     console.log(`usernamePassword[0] ${usernamePassword[0]}`);
-    const client = await BasicTokensModel.findOne({
-        where: { client_id: usernamePassword[0] },
-    });
+    const client = await getBasicTokenByClientId(usernamePassword[0])
     console.log(`client ${JSON.stringify(client)}`);
     let passwordIsValid = compareSync(
         usernamePassword[1],

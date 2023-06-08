@@ -1,4 +1,4 @@
-const { UserModel, UsersTokensModel, RoleModel, PermissionModel } = require('../models')
+const { UserModel, UsersTokensModel, RoleModel, PermissionModel, BasicTokensModel } = require('../models')
 const { Op } = require('../config').Sequelize
 const { sign } = require('jsonwebtoken')
 const getByUserNameOrEmail = async (email) => {
@@ -82,5 +82,7 @@ const allowedToAccessResource = (user, requestedResource) => {
         return result
     }, false)
 }
-
-module.exports = { getByUserNameOrEmail, findUserToken, generateJWT, saveJWT, getUserDetailsByToken, allowedToAccessResource }
+const getBasicTokenByClientId = async (client_id) => BasicTokensModel.findOne({
+    where: { client_id },
+});
+module.exports = { getByUserNameOrEmail, findUserToken, generateJWT, saveJWT, getUserDetailsByToken, allowedToAccessResource, getBasicTokenByClientId }
