@@ -82,5 +82,21 @@ const allowedToAccessResource = (user, requestedResource) => {
         return result
     }, false)
 }
+const getAllROles = async () => await RoleModel.findAll({
+    where: {
+        name: { [Op.in]: roles },
+        deleted: false
+    }
+})
+const createUser = async (data) => await UserModel.create({ ...data })
 
-module.exports = { getByUserNameOrEmail, findUserToken, generateJWT, saveJWT, getUserDetailsByToken, allowedToAccessResource }
+module.exports = {
+    getByUserNameOrEmail,
+    getAllROles,
+    createUser,
+    findUserToken,
+    generateJWT,
+    saveJWT,
+    getUserDetailsByToken,
+    allowedToAccessResource
+}
