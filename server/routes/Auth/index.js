@@ -7,6 +7,7 @@ router.post("/signUp", signUpValidator(), authController.create);
 
 // About page route.
 router.post("/signIn", signInValidator(), authController.signIn);
+router.get("/signOut", authController.signOutUser);
 
 // my profile route
 router.get("/myProfile", authController.myProfile);
