@@ -1,5 +1,4 @@
-const { BasicTokensModel, UsersTokensModel, UserModel, RoleModel } = require('../../models');
-
+const { BasicTokensModel } = require('../../models');
 const { compareSync } = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { getUserDetailsByToken, allowedToAccessResource } = require('../../services/auth.service');

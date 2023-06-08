@@ -7,6 +7,7 @@ const getBookingById = async (id) => await BookingsModel.findOne({
         id
     }
 })
+
 const deleteBookingById = async (id) => await BookingsModel.update({
     deleted: true
 }, { where: { id } })
@@ -47,16 +48,5 @@ const getAllBookingsByUserId = async ({ id, limit, offset }) => await BookingsMo
     offset,
 })
 const createBooking = async (data) => await BookingsModel.create({ ...data })
-const getCoachById = async (coachId) => await UserModel.findOne({
-    where: {
-        deleted: false,
-        id: coachId
-    },
-    include: [
-        {
-            model: RoleModel,
-            where: { name: "coach" }
-        }
-    ]
-})
-module.exports = { getBookingById, getCoachById, createBooking, deleteBookingById, getAllBookingsByUserId }
+
+module.exports = { getBookingById, createBooking, deleteBookingById, getAllBookingsByUserId }

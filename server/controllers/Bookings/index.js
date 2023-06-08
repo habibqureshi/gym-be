@@ -1,5 +1,6 @@
 const { sequelize } = require('../../config');
-const { getBookingById, deleteBookingById, createBooking, getCoachById } = require('../../services/booking.service');
+const { getBookingById, deleteBookingById, createBooking, getAllBookingsByUserId } = require('../../services/booking.service');
+const { getCoachById } = require('../../services/coach.service');
 const { getOffset } = require('../../utils/helpers/helper')
 const myBookings = async (req, res, next) => {
     try {
@@ -11,13 +12,13 @@ const myBookings = async (req, res, next) => {
         if (bookings.length === 0) {
             return res.status(200).json({ message: "No Data Found" })
         }
-        return res.status(200).json({ total: bookings.count, limit: limit, currentPage: page, data: bookings.rows })
+        return res.status(200).json({ total: bookings.count, limit, currentPage: page, data: bookings.rows })
     } catch (error) {
         next(error)
     }
 }
 
-const createBooking = async (req, res, next) => {
+const createNewBooking = async (req, res, next) => {
     try {
         const { currentUser } = req;
         const { time, coachId } = req.body
@@ -77,4 +78,4 @@ const deleteBooking = async (req, res, next) => {
         next(error)
     }
 }
-module.exports = { myBookings, createBooking, deleteBooking }
+module.exports = { myBookings, createNewBooking, deleteBooking }

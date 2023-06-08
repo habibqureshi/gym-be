@@ -1,6 +1,6 @@
 const router = require('express').Router()
-// const { myBookings, createBooking, deleteBooking } = require('../../controllers/Bookings')
+const { getAllCoach } = require('../../controllers/Coach')
 
-router.get('/', )
+router.get('/', getAllCoach)
 
 module.exports = router

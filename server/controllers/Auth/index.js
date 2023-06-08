@@ -22,6 +22,7 @@ async function signIn(req, res, next) {
             return res.status(401).json({ error: 'Invalid password' })
         }
         const exist = await findUserToken(user.dataValues.id)
+
         let token = exist && exist.token || null
         if (!token) {
             token = generateJWT(user.dataValues.id)
