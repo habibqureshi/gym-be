@@ -83,4 +83,4 @@ const allowedToAccessResource = (user, requestedResource) => {
     }, false)
 }
 
-module.exports = { getByUserNameOrEmail, findUserToken, generateJWT, saveJWT, getUserDetailsByToken }
+module.exports = { getByUserNameOrEmail, findUserToken, generateJWT, saveJWT, getUserDetailsByToken, allowedToAccessResource }

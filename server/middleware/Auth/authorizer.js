@@ -2,7 +2,7 @@ const { BasicTokensModel, UsersTokensModel, UserModel, RoleModel } = require('..
 
 const { compareSync } = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { getUserDetailsByToken } = require('../../services/auth.service');
+const { getUserDetailsByToken, allowedToAccessResource } = require('../../services/auth.service');
 const authSecret = process.env.AUTH_SECRET || "6472090aa02359fc74511149"
 const authorizer = async (req, res, next) => {
     try {
