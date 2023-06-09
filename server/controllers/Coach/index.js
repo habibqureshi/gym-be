@@ -16,7 +16,7 @@ exports.getAllCoach = async (req, res, next) => {
         const offset = getOffset({ limit, page })
         const coaches = await getAvailableCoach({ limit, offset })
         if (coaches.count === 0) {
-            return res.status(200).json({ total: coaches.count, limit, currentPage: page, message: "No Data Found" })
+            return res.statusCode(204)//.json({ total: coaches.count, limit, currentPage: page, message: "No Data Found" })
         }
         return res.status(200).json({ total: coaches.count, limit, currentPage: page, data: coaches.rows })
     } catch (error) {
@@ -42,7 +42,7 @@ exports.getMySchedule = async (req, res, next) => {
         const offset = getOffset({ limit, page })
         const mySchedules = await getMySchedules({ limit, offset, id: currentUser.id })
         if (mySchedules.count === 0) {
-            return res.status(200).json({ total: mySchedules.count, limit, currentPage: page, message: "No Saved Schedules Found" })
+            return res.statusCode(204)//.json({ total: mySchedules.count, limit, currentPage: page, message: "No Saved Schedules Found" })
         }
         return res.status(200).json({ total: mySchedules.count, limit, currentPage: page, data: mySchedules.rows })
     } catch (error) {
