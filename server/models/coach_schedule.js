@@ -20,10 +20,13 @@ module.exports = (sequelize, Sequelize) => {
             startTime: {
                 type: DataTypes.DATE,
                 allowNull: false,
-
             },
             endTime: {
                 type: DataTypes.DATE,
+                allowNull: false,
+            },
+            type: {
+                type: DataTypes.STRING(50),
                 allowNull: false,
             },
             enable: {

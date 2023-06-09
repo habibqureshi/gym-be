@@ -45,5 +45,6 @@ module.exports = {
     BasicTokensModel,
     RoleModel,
     PermissionModel,
-    BookingsModel
+    BookingsModel,
+    ScheduleModel
 };
