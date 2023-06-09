@@ -73,7 +73,6 @@ const generateJWT = (id) => sign({ id }, process.env.JWT_SECRET)
 const saveJWT = async (userName, userId, token) => await UsersTokensModel.create({ userName, userId, token })
 
 const allowedToAccessResource = (user, requestedResource) => {
-
     return user.roles.reduce((result, role) => {
         role.dataValues.permissions.forEach(permission => {
             if (permission.dataValues.api === requestedResource)
@@ -90,6 +89,19 @@ const getAllROles = async () => await RoleModel.findAll({
 })
 const createUser = async (data) => await UserModel.create({ ...data })
 
+const signOut = async (currentUser) => {
+    await UsersTokensModel.destroy({
+        where: {
+            userId: currentUser.id
+        }
+    })
+}
+const getBasicTokenByClientId = async (id) => await BasicTokensModel.findOne({
+    where: {
+        client_id: id
+    },
+    raw: true
+})
 module.exports = {
     getByUserNameOrEmail,
     getAllROles,
@@ -98,5 +110,7 @@ module.exports = {
     generateJWT,
     saveJWT,
     getUserDetailsByToken,
-    allowedToAccessResource
+    allowedToAccessResource,
+    signOut,
+    getBasicTokenByClientId
 }

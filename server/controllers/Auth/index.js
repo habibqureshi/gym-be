@@ -5,7 +5,8 @@ const { getByUserNameOrEmail,
     generateJWT,
     saveJWT,
     getAllROles,
-    createUser
+    createUser,
+    signOut
 } = require('../../services/auth.service')
 async function signIn(req, res, next) {
     try {
@@ -70,9 +71,24 @@ const create = async (req, res, next) => {
 };
 const myProfile = async (req, res, next) => {
     try {
-        return res.status(200).json(req.currentUser)
+        const { currentUser } = req
+        const userRoles = currentUser.roles.map(role => {
+            return role.permissions.map(permission => {
+                return { id: permission.id, name: permission.name, api: permission.api }
+            })
+        })
+        return res.status(200).json({ ...JSON.parse(JSON.stringify(currentUser)), roles: userRoles })
     } catch (error) {
         next(error)
     }
 }
-module.exports = { signIn, create, myProfile }
+const signOutUser = async (req, res, next) => {
+    try {
+        const { currentUser } = req
+        await signOut(currentUser)
+        return res.status(200).json({ message: `${currentUser.userName} Signed Out Success` })
+    } catch (error) {
+        next(error)
+    }
+}
+module.exports = { signIn, create, myProfile, signOutUser }

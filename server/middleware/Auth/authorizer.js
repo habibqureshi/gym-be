@@ -43,7 +43,7 @@ const handleAuthRoutes = async ({ token, req, res, next }) => {
 const handleBearer = async ({ token, req, res, next }) => {
     try {
         const isTokenExist = await getUserDetailsByToken(token);
-        if (!isTokenExist) next(new Error("Unverified Token Found in Request"));
+        if (!isTokenExist) return res.status(400).json({ message: "Invalid Token Found" })
         const { user } = isTokenExist
         jwt.verify(token, process.env.JWT_SECRET);
         const requestedResource = `${req.method}:/${req.originalUrl.split('api/')[1].split('?')[0]}`

@@ -6,6 +6,10 @@
   "scripts": {
     "dev": "nodemon server/index.js"
   },
+  "engines": {
+    "npm": "9.4.0",
+    "node": "16.19.0"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -22,7 +26,6 @@
     "sequelize": "^6.32.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22",
-    "sequelize-cli": "^6.6.0"
+    "nodemon": "^2.0.22"
   }
 }

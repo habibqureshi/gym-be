@@ -1,4 +1,4 @@
-const { RoleModel, UserModel } = require("../models");
+const { RoleModel, UserModel, ScheduleModel } = require("../models");
 
 exports.getAvailableCoach = async ({ limit, offset }) => await UserModel.findAndCountAll({
     where: {
@@ -30,4 +30,22 @@ exports.getCoachById = async (id) => await UserModel.findOne({
             where: { name: "coach" }
         }
     ]
+})
+exports.saveSchedule = async (data) => await ScheduleModel.create({
+    ...data
+})
+exports.getMySchedules = async ({ limit, offset, id }) => await ScheduleModel.findAndCountAll({
+    where: {
+        coachId: id,
+        deleted: false
+    },
+    include: [
+        {
+            model: UserModel,
+            attributes: ['name', 'userName', 'image'],
+            where: { deleted: false }
+        }
+    ],
+    limit,
+    offset
 })
