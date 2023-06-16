@@ -12,17 +12,16 @@ const { getByUserNameOrEmail,
 async function signIn(req, res, next) {
     try {
         const { email, password } = req.body
-        console.log("signin req body==>>>", req.body)
         const user = await getByUserNameOrEmail(email)
         if (user === 'disabled') {
-            return res.status(401).json({ error: 'User Is Disabled' })
+            return res.status(401).json({ message: 'User Is Disabled' })
         }
         if (user === null) {
-            return res.status(401).json({ error: 'User Not Found' })
+            return res.status(401).json({ message: 'User Not Found' })
         }
         const isPasswordValid = compareSync(password, user.dataValues.password)
         if (!isPasswordValid) {
-            return res.status(401).json({ error: 'Invalid password' })
+            return res.status(401).json({ message: 'Invalid password' })
         }
         const exist = await findUserToken(user.dataValues.id)
 
