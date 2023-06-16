@@ -1,16 +1,18 @@
 const { compareSync } = require('bcrypt')
 const { sequelize } = require('../../config')
+
 const { getByUserNameOrEmail,
     findUserToken,
     generateJWT,
     saveJWT,
-    getAllROles,
+    getRoleByName,
     createUser,
     signOut
 } = require('../../services/auth.service')
 async function signIn(req, res, next) {
     try {
         const { email, password } = req.body
+        console.log("signin req body==>>>", req.body)
         const user = await getByUserNameOrEmail(email)
         if (user === 'disabled') {
             return res.status(401).json({ error: 'User Is Disabled' })
@@ -47,18 +49,18 @@ async function signIn(req, res, next) {
 }
 const create = async (req, res, next) => {
     try {
-        let { userName, email, password, firstName, lastName, roles } = req.body
+        let { userName, email, password, firstName, lastName } = req.body
         const transaction = await sequelize.transaction(async (t) => {
             const newUser = await createUser({ userName, email, password, firstName, lastName });
-            const savedRoles = await getAllROles()
-            if (roles) assignedRoles = await newUser.setRoles(savedRoles.map(item => item.dataValues.id))
+            const savedRole = await getRoleByName('gymnast')
+            await newUser.setRoles([savedRole])
             return {
                 id: newUser.id,
                 firstName: newUser.firstName,
                 lastName: newUser.lastName,
                 email: newUser.email,
                 userName: newUser.userName,
-                roles: savedRoles.map(item => { return { id: item.dataValues.id, name: item.dataValues.name } })
+                role: { name: savedRole.name }
             }
         })
         return res.status(201).json({

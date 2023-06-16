@@ -4,22 +4,22 @@ module.exports = (error, req, res, next) => {
         console.log(`Error Name: ${error.name}`)
         switch (error.name) {
             case 'Unauthorized':
-                return res.status(401).send({
+                return res.status(401).json({
                     error: 'Unauthorized',
                     message: "User not Authorized"
                 })
             case 'BadRequest':
-                return res.status(400).send({
+                return res.status(400).json({
                     error: error.name,
                     message: error.message
                 })
             case 'SequelizeUniqueConstraintError':
-                return res.status(400).send({
+                return res.status(400).json({
                     error: error.name,
                     message: `${error.errors[0].value} is already in use`
                 })
             case 'JsonWebTokenError':
-                return res.status(401).send({
+                return res.status(401).json({
                     error: 'Unauthorized',
                     message: `Invalid Token`
                 })

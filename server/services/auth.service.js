@@ -81,12 +81,19 @@ const allowedToAccessResource = (user, requestedResource) => {
         return result
     }, false)
 }
-const getAllROles = async () => await RoleModel.findAll({
+const getAllRoles = async () => await RoleModel.findAll({
     where: {
         name: { [Op.in]: roles },
         deleted: false
     }
 })
+const getRoleByName = async (role) => await RoleModel.findOne({
+    where: {
+        name: role,
+        deleted: false
+    },
+})
+
 const createUser = async (data) => await UserModel.create({ ...data })
 
 const signOut = async (currentUser) => {
@@ -104,7 +111,7 @@ const getBasicTokenByClientId = async (id) => await BasicTokensModel.findOne({
 })
 module.exports = {
     getByUserNameOrEmail,
-    getAllROles,
+    getAllRoles,
     createUser,
     findUserToken,
     generateJWT,
@@ -112,5 +119,6 @@ module.exports = {
     getUserDetailsByToken,
     allowedToAccessResource,
     signOut,
-    getBasicTokenByClientId
+    getBasicTokenByClientId,
+    getRoleByName
 }

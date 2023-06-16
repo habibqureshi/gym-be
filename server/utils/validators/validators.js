@@ -26,8 +26,7 @@ const signInValidator = () => {
     })
 }
 
-
-const signUpValidator = () => {
+const signUpValidatorUser = () => {
     return validateRoute({
         body: {
             type: 'object',
@@ -65,16 +64,41 @@ const signUpValidator = () => {
                     minLength: 5,
                     maxLength: 100,
                     errorMessage: "Password is not valid"
-                },
-                roles: {
-                    type: 'array',
-                    items: {
-                        type: "string"
-                    }
                 }
             },
 
         }
     })
 }
-module.exports = { signInValidator, signUpValidator }
+const signUpValidatorCoach = () => {
+    return validateRoute({
+        body: {
+            type: 'object',
+            required: ['firstName', "lastName", "email"],
+            additionalProperties: false,
+            properties: {
+                firstName: {
+                    type: "string",
+                    nullable: false,
+                    minLength: 2,
+                    maxLength: 100,
+                    errorMessage: "First Name is not valid"
+                },
+                lastName: {
+                    type: "string",
+                    nullable: false,
+                    minLength: 2,
+                    maxLength: 100,
+                    errorMessage: "Last Name is not valid"
+                },
+                email: {
+                    type: "string",
+                    nullable: false,
+                }
+            },
+
+        }
+    })
+}
+
+module.exports = { signInValidator, signUpValidatorUser, signUpValidatorCoach }

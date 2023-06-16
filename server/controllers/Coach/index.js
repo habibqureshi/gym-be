@@ -23,6 +23,7 @@ exports.getAllCoach = async (req, res, next) => {
         next(error)
     }
 }
+
 exports.saveSchedule = async (req, res, next) => {
     try {
         const { startTime, endTime, type } = req.body
