@@ -3,12 +3,12 @@ const config = {
   host: "localhost",
   database: "gym",
   username: "root",
-  password: "Password_123",
-}
+  password: "Password_2547422",
+};
 
 module.exports = {
   ...config,
-  dialect: 'mysql',
+  dialect: "mysql",
   define: {
     timestamps: false,
   },
