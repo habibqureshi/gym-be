@@ -1,6 +1,9 @@
 const { sequelize } = require("../../config");
 const { getRoleByName, createUser } = require("../../services/auth.service");
 
+const { getCoachById } = require("../../services/coach.service");
+const { updateUser } = require("../../services/admin.service");
+
 const createCoach = async (req, res, next) => {
   try {
     let { email, firstName, lastName } = req.body;
@@ -35,10 +38,77 @@ const createCoach = async (req, res, next) => {
     next(error);
   }
 };
+
+const update = async (req, res, next) => {
+  const { id } = req.query;
+  const {
+    userName,
+    firstName,
+    lastName,
+    phoneNumber,
+    email,
+    password,
+    image,
+    enable,
+    deleted,
+    phone,
+    status,
+    gymId,
+    private,
+    publicToTime,
+    publicFromTime,
+    privateFromTime,
+    privateToTime,
+  } = req.body;
+  try {
+    const user = await getCoachById(id);
+
+    console.log("user: ", user);
+
+    if (!user || user["roles.name"] != "coach") {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const updatedUser = await updateUser(
+      user.id,
+      {
+        userName,
+        firstName,
+        lastName,
+        phoneNumber,
+        email,
+        password,
+        image,
+        enable,
+        deleted,
+        phone,
+        status,
+        gymId,
+        private,
+      },
+      {
+        publicToTime,
+        publicFromTime,
+        privateFromTime,
+        privateToTime,
+      }
+    );
+    // console.log();
+    if (updatedUser == 1) {
+      res.status(200).json({ message: "User Updated" });
+    } else {
+      res.status(400).json({ message: updatedUser });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 const createSchedule = (req, res, next) => {
   try {
   } catch (error) {
     next(error);
   }
 };
-module.exports = { createCoach, createSchedule };
+module.exports = { createCoach, createSchedule, update };

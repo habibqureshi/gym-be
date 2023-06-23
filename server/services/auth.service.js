@@ -5,6 +5,7 @@ const {
   PermissionModel,
   BasicTokensModel,
 } = require("../models");
+
 const { Op } = require("../config").Sequelize;
 const { sign } = require("jsonwebtoken");
 const getByUserNameOrEmail = async (email) => {
@@ -101,8 +102,6 @@ const getRoleByName = async (role) =>
 
 const createUser = async (data) => await UserModel.create({ ...data });
 
-const updateUser = async (data) => await UserModel.updateUser({ ...data });
-
 const signOut = async (currentUser) => {
   await UsersTokensModel.destroy({
     where: {
@@ -129,5 +128,4 @@ module.exports = {
   signOut,
   getBasicTokenByClientId,
   getRoleByName,
-  updateUser,
 };

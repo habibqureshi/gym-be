@@ -21,6 +21,7 @@
     "express": "^4.18.2",
     "express-ajv-middleware": "^2.0.3",
     "jsonwebtoken": "^9.0.0",
+    "moment": "^2.29.4",
     "morgan": "^1.10.0",
     "mysql2": "^3.3.3",
     "sequelize": "^6.32.0"

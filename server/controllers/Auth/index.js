@@ -124,8 +124,6 @@ const create = async (req, res, next) => {
   }
 };
 
-const updateUser = async (req, res, next) => {};
-
 const myProfile = async (req, res, next) => {
   try {
     const { currentUser } = req;

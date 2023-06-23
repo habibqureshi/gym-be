@@ -2,7 +2,8 @@ const router = require("express").Router();
 
 router.use("/auth", require("./Auth"));
 router.use("/bookings", require("./Bookings"));
-router.use("/coachs", require("./Coach"));
+router.use("/coach", require("./Coach"));
+router.use("/gymnast", require("./Gymnast"));
 router.use("/admin", require("./Admin"));
 router.use("/states", require("./States"));
 router.use("/city", require("./City"));

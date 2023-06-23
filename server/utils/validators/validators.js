@@ -122,4 +122,59 @@ const signUpValidatorCoach = () => {
   });
 };
 
-module.exports = { signInValidator, signUpValidatorUser, signUpValidatorCoach };
+const isTimeBetween = (currentTime, startTime, endTime) => {
+  const currentStart = moment(currentTime.split("-")[0], "HH:mm:ss");
+  const currentEnd = moment(currentTime.split("-")[1], "HH:mm:ss");
+  const start = moment(startTime, "HH:mm:ss");
+  const end = moment(endTime, "HH:mm:ss");
+
+  return (
+    currentStart.isBetween(start, end, null, "[]") ||
+    currentEnd.isBetween(start, end, null, "[]")
+  );
+};
+
+function isRequestedDateTimeInRange(
+  requestedFrom,
+  requestedTo,
+  bookedFrom,
+  bookedTo
+) {
+  const requestedStart = new Date(requestedFrom);
+  const requestedEnd = new Date(requestedTo);
+  const bookedStart = new Date(bookedFrom);
+  const bookedEnd = new Date(bookedTo);
+
+  return (
+    (requestedStart >= bookedStart && requestedStart <= bookedEnd) ||
+    (requestedEnd >= bookedStart && requestedEnd <= bookedEnd)
+  );
+}
+
+function isRequestedTimeInRange(
+  requestedFrom,
+  requestedTo,
+  bookedFrom,
+  bookedTo
+) {
+  const requestedStartTime = requestedFrom;
+  const requestedEndTime = requestedTo;
+  const bookedStartTime = bookedFrom;
+  const bookedEndTime = bookedTo;
+
+  return (
+    (requestedStartTime >= bookedStartTime &&
+      requestedStartTime < bookedEndTime) ||
+    (requestedEndTime > bookedStartTime && requestedEndTime <= bookedEndTime) ||
+    (requestedStartTime <= bookedStartTime && requestedEndTime >= bookedEndTime)
+  );
+}
+
+module.exports = {
+  signInValidator,
+  signUpValidatorUser,
+  signUpValidatorCoach,
+  isTimeBetween,
+  isRequestedDateTimeInRange,
+  isRequestedTimeInRange,
+};

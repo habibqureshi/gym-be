@@ -1,17 +1,13 @@
 module.exports = (sequelize, Sequelize) => {
   const { DataTypes } = Sequelize;
-  const Bookings = sequelize.define(
-    "bookings",
+  const TimeTable = sequelize.define(
+    "time_table",
     {
       id: {
         type: DataTypes.INTEGER(11),
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-      },
-      gymnastId: {
-        type: DataTypes.INTEGER(11),
-        allowNull: false,
       },
       coachId: {
         type: DataTypes.INTEGER(11),
@@ -22,12 +18,16 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: false,
         defaultValue: "SYSTEM",
       },
-      to: {
-        type: DataTypes.DATE,
+      from: {
+        type: DataTypes.TIME,
         allowNull: false,
       },
-      from: {
-        type: DataTypes.DATE,
+      to: {
+        type: DataTypes.TIME,
+        allowNull: false,
+      },
+      type: {
+        type: DataTypes.STRING(50),
         allowNull: false,
       },
       enable: {
@@ -38,19 +38,14 @@ module.exports = (sequelize, Sequelize) => {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
       },
-      status: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-        defaultValue: "PENDING",
-      },
     },
     {
       underscored: true,
       timestamps: true,
       freezeTableName: true,
       // define the table's name
-      tableName: "bookings",
+      tableName: "time_table",
     }
   );
-  return Bookings;
+  return TimeTable;
 };
