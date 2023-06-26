@@ -58,10 +58,12 @@ async function signIn(req, res, next) {
 }
 
 async function saveDeviceToken(userId, deviceToken) {
-  const user = await UserModel.findByPk(userId);
+  const user = await UserModel.findByPk(userId, {
+    attributes: { exclude: ["password"] },
+  });
   if (user) {
     user.deviceToken = deviceToken;
-    await user.save();
+    await user.save({ fields: ["deviceToken"] });
   }
 }
 

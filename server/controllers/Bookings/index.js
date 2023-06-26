@@ -41,11 +41,16 @@ const myBookings = async (req, res, next) => {
 
 const updateBookings = async (req, res, next) => {
   try {
-    const { id, status } = req.query;
+    const { id, status, currentUser } = req.query;
     console.log(id, status);
     const update = await updateBookingStatus(id, status);
     console.log(update);
     if (update[0] === 1) {
+      const notify = await notifyUser(
+        coach.id,
+        currentUser,
+        `Your private booking from ${currentUser.userName} has been ${status}ed`
+      );
       return res.status(200).json({ message: `Booking ${status}` });
     } else {
       return res.status(400).json({ message: `error updating booking` });
