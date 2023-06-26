@@ -20,6 +20,11 @@ const signInValidator = () => {
           maxLength: 100,
           errorMessage: "Password is not valid",
         },
+        deviceToken: {
+          type: "string",
+          nullable: false,
+          errorMessage: "Device Tokens is not valid",
+        },
       },
       additionalProperties: false,
     },

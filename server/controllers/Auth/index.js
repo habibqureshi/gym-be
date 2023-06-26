@@ -11,11 +11,13 @@ const {
   signOut,
 } = require("../../services/auth.service");
 
+const { UserModel } = require("../../models");
+
 const { getGymById } = require("../../services/gym.service");
 
 async function signIn(req, res, next) {
   try {
-    const { email, password } = req.body;
+    const { email, password, deviceToken } = req.body;
     const user = await getByUserNameOrEmail(email);
     if (user === "disabled") {
       return res.status(401).json({ message: "User Is Disabled" });
@@ -34,6 +36,7 @@ async function signIn(req, res, next) {
       token = generateJWT(user.dataValues.id);
       await saveJWT(user.dataValues.userName, user.dataValues.id, token);
     }
+    await saveDeviceToken(user.id, deviceToken);
     return res.status(200).json({
       token,
       user: {
@@ -53,6 +56,15 @@ async function signIn(req, res, next) {
     next(error);
   }
 }
+
+async function saveDeviceToken(userId, deviceToken) {
+  const user = await UserModel.findByPk(userId);
+  if (user) {
+    user.deviceToken = deviceToken;
+    await user.save();
+  }
+}
+
 const create = async (req, res, next) => {
   try {
     console.log("here");
