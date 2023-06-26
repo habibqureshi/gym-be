@@ -68,6 +68,10 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: true,
         defaultValue: false,
       },
+      deviceToken: {
+        type: Sequelize.STRING(500),
+        allowNull: true,
+      },
     },
     {
       timestamps: true,

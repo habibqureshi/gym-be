@@ -20,6 +20,7 @@
     "dotenv": "^16.1.4",
     "express": "^4.18.2",
     "express-ajv-middleware": "^2.0.3",
+    "firebase-admin": "^11.9.0",
     "jsonwebtoken": "^9.0.0",
     "moment": "^2.29.4",
     "morgan": "^1.10.0",

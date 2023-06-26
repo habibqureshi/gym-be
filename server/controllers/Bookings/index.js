@@ -8,6 +8,7 @@ const {
   getBookingByCoachId,
   updateBookingStatus,
 } = require("../../services/booking.service");
+const { notifyUser } = require("../Notification");
 const { getCoachById } = require("../../services/coach.service");
 const { getTimeTableByCoachId } = require("../../services/time_table.service");
 const { getOffset } = require("../../utils/helpers/helper");
@@ -157,6 +158,9 @@ const createNewBooking = async (req, res, next) => {
         status: "PENDING",
       });
       console.log(newBooking.to);
+      let message = `${currentUser.userName} has requested you for the private booking on `;
+      const notify = await notifyUser(coach.id, currentUser, message);
+      // console.log(notify);
       return {
         id: newBooking.dataValues.id,
         to: newBooking.to.toLocaleString("en-US", {

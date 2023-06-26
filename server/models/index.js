@@ -12,6 +12,8 @@ const TimeTableModel = require("./time_table")(sequelize, Sequelize);
 const PermissionModel = require("./permission")(sequelize, Sequelize);
 const BookingsModel = require("./bookings")(sequelize, Sequelize);
 const ScheduleModel = require("./coach_schedule")(sequelize, Sequelize);
+const NotificationModel = require("./notification")(sequelize, Sequelize);
+const DeviceTokensModel = require("./users-device-token")(sequelize, Sequelize);
 // Add associations
 UserModel.hasMany(UsersTokensModel, { foreignKey: "user_id" });
 UserModel.hasMany(BookingsModel, { foreignKey: "gymnast_id" });
@@ -47,6 +49,30 @@ GymModel.belongsTo(CityModel, {
 });
 TimeTableModel.belongsTo(UserModel, { foreignKey: "coach_id" });
 UserModel.hasMany(TimeTableModel, { foreignKey: "coach_id" });
+
+NotificationModel.belongsTo(UserModel, {
+  as: "notification_sender",
+  foreignKey: "sender",
+  allowNull: false,
+});
+UserModel.hasMany(NotificationModel, {
+  foreignKey: "sender",
+  allowNull: false,
+});
+
+NotificationModel.belongsTo(UserModel, {
+  as: "notification_receiver",
+  foreignKey: "receiver",
+  allowNull: false,
+});
+UserModel.hasMany(NotificationModel, {
+  foreignKey: "receiver",
+  allowNull: false,
+});
+
+DeviceTokensModel.belongsTo(UserModel, { foreignKey: "user_id" });
+UserModel.hasMany(DeviceTokensModel);
+
 // sequelize.sync().then(() => {
 //     console.log('Database Synchronized')
 // })
@@ -62,4 +88,5 @@ module.exports = {
   CityModel,
   GymModel,
   TimeTableModel,
+  NotificationModel,
 };
