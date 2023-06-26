@@ -6,14 +6,12 @@ const {
   createBooking,
   getAllBookingsByUserId,
   getBookingByCoachId,
+  updateBookingStatus,
 } = require("../../services/booking.service");
 const { getCoachById } = require("../../services/coach.service");
 const { getTimeTableByCoachId } = require("../../services/time_table.service");
 const { getOffset } = require("../../utils/helpers/helper");
-const {
-  isRequestedDateTimeInRange,
-  isRequestedTimeInRange,
-} = require("../../utils/validators/validators");
+const { isRequestedTimeInRange } = require("../../utils/validators/validators");
 const myBookings = async (req, res, next) => {
   try {
     const { currentUser } = req;
@@ -35,6 +33,22 @@ const myBookings = async (req, res, next) => {
       currentPage: page,
       data: bookings.rows,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateBookings = async (req, res, next) => {
+  try {
+    const { id, status } = req.query;
+    console.log(id, status);
+    const update = await updateBookingStatus(id, status);
+    console.log(update);
+    if (update[0] === 1) {
+      return res.status(200).json({ message: `Booking ${status}` });
+    } else {
+      return res.status(400).json({ message: `error updating booking` });
+    }
   } catch (error) {
     next(error);
   }
@@ -200,4 +214,9 @@ const deleteBooking = async (req, res, next) => {
     next(error);
   }
 };
-module.exports = { myBookings, createNewBooking, deleteBooking };
+module.exports = {
+  myBookings,
+  createNewBooking,
+  deleteBooking,
+  updateBookings,
+};

@@ -4,10 +4,18 @@ const { Op } = require("../config").Sequelize;
 const getBookingById = async (id) =>
   await BookingsModel.findOne({
     where: {
-      deleted: false,
       id,
     },
+    raw: true,
   });
+
+const updateBookingStatus = async (id, booking_status) =>
+  await BookingsModel.update(
+    {
+      status: booking_status,
+    },
+    { where: { id } }
+  );
 
 const getBookingByCoachId = async (coachId) =>
   await BookingsModel.findAll({
@@ -55,7 +63,7 @@ const getAllBookingsByUserId = async ({ id, limit, offset }) =>
       deleted: false,
       [Op.or]: [{ coachId: id }, { gymnastId: id }],
     },
-    attributes: ["id", "to", "from"],
+    attributes: ["id", "to", "from", "status"],
     include: [
       {
         model: UserModel,
@@ -118,4 +126,5 @@ module.exports = {
   getBookingByCoachId,
   getBookingByCoachIdAndDate,
   getAllBookingsByGymnastId,
+  updateBookingStatus,
 };
