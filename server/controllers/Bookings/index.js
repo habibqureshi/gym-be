@@ -65,6 +65,7 @@ const updateBookings = async (req, res, next) => {
         `Your private booking from ${currentUser.userName} has been ${status}ed`,
         NOTIFICATION_TYPE.MY_CALENDER
       );
+      console.log(notify);
       return res.status(200).json({ message: `Booking ${status}` });
     } else {
       return res.status(400).json({ message: `error updating booking` });
