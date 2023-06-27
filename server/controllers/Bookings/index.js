@@ -45,6 +45,9 @@ const updateBookings = async (req, res, next) => {
   try {
     const { id, status } = req.query;
     const { currentUser } = req;
+    if (status != "ACCEPT" || status != "REJECT") {
+      return res.status(400).json({ message: "Invalid Status" });
+    }
     const booking = await getBookingById(id);
     if (!booking) {
       return res.status(400).json({ message: `booking not found` });
