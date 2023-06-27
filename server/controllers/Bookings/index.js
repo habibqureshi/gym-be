@@ -56,7 +56,7 @@ const updateBookings = async (req, res, next) => {
         booking.gymnastId,
         currentUser,
         `Your private booking from ${currentUser.userName} has been ${status}ed`,
-        NOTIFICATION_TYPE.NONE
+        NOTIFICATION_TYPE.MY_CALENDER
       );
       return res.status(200).json({ message: `Booking ${status}` });
     } else {
