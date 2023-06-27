@@ -50,7 +50,7 @@ const updateBookings = async (req, res, next) => {
       return res.status(400).json({ message: `booking not found` });
     }
     if (booking.coadId != currentUser.id) {
-      res
+      return res
         .status(400)
         .json({ message: "Cannot update booking that is not yours" });
     }
