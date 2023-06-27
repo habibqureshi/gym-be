@@ -22,6 +22,9 @@ const getBookingByCoachId = async (coachId) =>
     where: {
       deleted: false,
       coachId,
+      status: {
+        [Op.ne]: "REJECT",
+      },
     },
     raw: true,
   });
