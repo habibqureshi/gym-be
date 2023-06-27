@@ -13,6 +13,8 @@ const { getCoachById } = require("../../services/coach.service");
 const { getTimeTableByCoachId } = require("../../services/time_table.service");
 const { getOffset } = require("../../utils/helpers/helper");
 const { isRequestedTimeInRange } = require("../../utils/validators/validators");
+const { NOTIFICATION_TYPE } = require("../../utils/helpers/helper");
+
 const myBookings = async (req, res, next) => {
   try {
     const { currentUser } = req;
@@ -41,15 +43,20 @@ const myBookings = async (req, res, next) => {
 
 const updateBookings = async (req, res, next) => {
   try {
-    const { id, status, currentUser } = req.query;
-    console.log(id, status);
+    const { id, status } = req.query;
+    const { currentUser } = req;
+    const booking = await getBookingById(id);
+    if (!booking) {
+      return res.status(400).json({ message: `booking not found` });
+    }
     const update = await updateBookingStatus(id, status);
-    console.log(update);
+    console.log(currentUser);
     if (update[0] === 1) {
       const notify = await notifyUser(
-        coach.id,
+        booking.gymnastId,
         currentUser,
-        `Your private booking from ${currentUser.userName} has been ${status}ed`
+        `Your private booking from ${currentUser.userName} has been ${status}ed`,
+        NOTIFICATION_TYPE.NONE
       );
       return res.status(200).json({ message: `Booking ${status}` });
     } else {
@@ -123,15 +130,9 @@ const createNewBooking = async (req, res, next) => {
       const requestToUTC = new Date(new Date(to));
       const requestFromUTC = new Date(new Date(from));
 
-      // console.log("new", requestToUTC);
-      // console.log("new", requestFromUTC);
-
       const hasOverlap = await bookings.some((booking) => {
         const bookingFrom = booking.from;
         const bookingTo = booking.to;
-
-        // console.log("booked", bookingTo);
-        // console.log("booked", bookingFrom);
 
         // Check for overlap
         return (
@@ -164,8 +165,12 @@ const createNewBooking = async (req, res, next) => {
       });
       console.log(newBooking.to);
       let message = `${currentUser.userName} has requested you for the private booking on `;
-      const notify = await notifyUser(coach.id, currentUser, message);
-      // console.log(notify);
+      const notify = await notifyUser(
+        coach.id,
+        currentUser,
+        message,
+        NOTIFICATION_TYPE.MY_PRIVATES
+      );
       return {
         id: newBooking.dataValues.id,
         to: newBooking.to.toLocaleString("en-US", {

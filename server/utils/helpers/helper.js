@@ -32,6 +32,7 @@ const NOTIFICATION_TYPE = {
   NONE: "NONE",
   INVITE_REVOKED: "INVITE_REVOKED",
   DOWNLOAD_HISTORY: "Download_History",
+  MY_PRIVATES: "My_Privates",
 };
 
 module.exports = {

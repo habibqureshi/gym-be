@@ -3,6 +3,8 @@ const { getRoleByName, createUser } = require("../../services/auth.service");
 
 const { getCoachById } = require("../../services/coach.service");
 const { updateUser } = require("../../services/admin.service");
+const { notifyUser } = require("../Notification");
+const { NOTIFICATION_TYPE } = require("../../utils/helpers/helper");
 
 const createCoach = async (req, res, next) => {
   try {
@@ -40,6 +42,7 @@ const createCoach = async (req, res, next) => {
 };
 
 const update = async (req, res, next) => {
+  const { currentUser } = req;
   const { id } = req.query;
   const {
     userName,
@@ -95,6 +98,12 @@ const update = async (req, res, next) => {
     );
     // console.log();
     if (updatedUser == 1) {
+      const notify = await notifyUser(
+        user.id,
+        currentUser,
+        "You've been approved by the Admin",
+        NOTIFICATION_TYPE.NONE
+      );
       res.status(200).json({ message: "User Updated" });
     } else {
       res.status(400).json({ message: updatedUser });
