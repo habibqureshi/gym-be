@@ -34,6 +34,7 @@ const NOTIFICATION_TYPE = {
   DOWNLOAD_HISTORY: "Download_History",
   MY_PRIVATES: "My_Privates",
   MY_CALENDER: "My Calendar",
+  COACH: "Coach",
 };
 
 module.exports = {

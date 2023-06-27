@@ -102,7 +102,7 @@ const update = async (req, res, next) => {
         user.id,
         currentUser,
         "You've been approved by the Admin",
-        NOTIFICATION_TYPE.NONE
+        NOTIFICATION_TYPE.COACH
       );
       res.status(200).json({ message: "User Updated" });
     } else {
