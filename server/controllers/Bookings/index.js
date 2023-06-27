@@ -49,6 +49,11 @@ const updateBookings = async (req, res, next) => {
     if (!booking) {
       return res.status(400).json({ message: `booking not found` });
     }
+    if (booking.coadId != currentUser.id) {
+      res
+        .status(400)
+        .json({ message: "Cannot update booking that is not yours" });
+    }
     const update = await updateBookingStatus(id, status);
     console.log(currentUser);
     if (update[0] === 1) {
