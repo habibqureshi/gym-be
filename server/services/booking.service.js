@@ -43,6 +43,9 @@ const getBookingByCoachIdAndDate = async (coachId, date) => {
           formattedDate.getTime() + 24 * 60 * 60 * 1000
         ).toISOString(),
       },
+      status: {
+        [Op.ne]: "REJECT",
+      },
     },
     raw: true,
   });
