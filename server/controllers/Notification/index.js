@@ -9,12 +9,12 @@ const {
 
 const { UserModel } = require("../../models");
 
-const notifyUser = async (clientId, currentUser, msg) => {
+const notifyUser = async (clientId, currentUser, msg, notifyType) => {
   const user = await UserModel.findOne({ where: { id: clientId }, raw: true });
   console.log("msg: ", msg);
   const message = new NotificationMessage(
     "Private Booking",
-    NOTIFICATION_TYPE.NONE,
+    notifyType,
     { positive: "", negative: "", neutral: "OK" },
     msg
   );
