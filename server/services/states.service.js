@@ -29,3 +29,8 @@ exports.getStateById = async (id) =>
     },
     attributes: ["id", "name", "enable", "deleted", "createdAt", "updatedAt"],
   });
+
+exports.createStates = async (data) => await StatesModel.create({ ...data });
+
+exports.updateState = async (id, data) =>
+  await StatesModel.update(data, { where: { id } });

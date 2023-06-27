@@ -47,7 +47,7 @@ const getBookingByCoachIdAndDate = async (coachId, date) => {
         ).toISOString(),
       },
       status: {
-        [Op.ne]: "REJECT",
+        [Op.notIn]: ["REJECT", "CANCEL"],
       },
     },
     raw: true,
@@ -63,6 +63,18 @@ const deleteBookingById = async (id) =>
     },
     { where: { id } }
   );
+
+const getBookings = async ({ limit, offset }) => {
+  await BookingsModel.findAndCountAll({
+    where: {
+      deleted: false,
+    },
+    order: [["id", "DESC"]],
+    limit,
+    offset,
+  });
+};
+
 const getAllBookingsByUserId = async ({ id, limit, offset }) =>
   await BookingsModel.findAndCountAll({
     where: {
@@ -133,4 +145,5 @@ module.exports = {
   getBookingByCoachIdAndDate,
   getAllBookingsByGymnastId,
   updateBookingStatus,
+  getBookings,
 };

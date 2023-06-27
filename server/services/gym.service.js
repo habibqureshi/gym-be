@@ -58,3 +58,8 @@ exports.getGymById = async (id) =>
       },
     ],
   });
+
+exports.createGym = async (data) => await GymModel.create({ ...data });
+
+exports.updateGym = async (id, data) =>
+  await GymModel.update(data, { where: { id } });

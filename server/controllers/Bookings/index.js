@@ -7,6 +7,7 @@ const {
   getAllBookingsByUserId,
   getBookingByCoachId,
   updateBookingStatus,
+  getBookings,
 } = require("../../services/booking.service");
 const { notifyUser } = require("../Notification");
 const { getCoachById } = require("../../services/coach.service");
@@ -14,6 +15,32 @@ const { getTimeTableByCoachId } = require("../../services/time_table.service");
 const { getOffset } = require("../../utils/helpers/helper");
 const { isRequestedTimeInRange } = require("../../utils/validators/validators");
 const { NOTIFICATION_TYPE } = require("../../utils/helpers/helper");
+
+const getAllBookings = async (req, res, next) => {
+  try {
+    const { currentUser } = req;
+    let { page = 1, limit = 10 } = req.query;
+    limit = +limit;
+    page = +page;
+    const offset = getOffset({ limit, page });
+    const bookings = await getBookings({
+      id: currentUser.id,
+      limit,
+      offset,
+    });
+    if (bookings.length === 0) {
+      return res.status(200).json({ message: "No Data Found" });
+    }
+    return res.status(200).json({
+      total: bookings.count,
+      limit,
+      currentPage: page,
+      data: bookings.rows,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const myBookings = async (req, res, next) => {
   try {
@@ -45,19 +72,22 @@ const updateBookings = async (req, res, next) => {
   try {
     const { id, status } = req.query;
     const { currentUser } = req;
-    if (status != "ACCEPT" && status != "REJECT") {
+    if (status != "ACCEPT" && status != "REJECT" && status != "CANCEL") {
       return res.status(400).json({ message: "Invalid Status" });
     }
     const booking = await getBookingById(id);
     if (!booking) {
       return res.status(400).json({ message: `booking not found` });
     }
-    // console.log(booking);
-    // console.log(booking.coachId, currentUser.id);
-    if (booking.coachId != currentUser.id) {
-      return res
-        .status(400)
-        .json({ message: "Cannot update booking that is not yours" });
+    if (!currentUser.roles.some((role) => role.name === "admin")) {
+      console.log("not admin");
+      if (booking.coachId != currentUser.id) {
+        return res
+          .status(400)
+          .json({ message: "Cannot update booking that is not yours" });
+      }
+    } else {
+      console.log("admin");
     }
     const update = await updateBookingStatus(id, status);
     console.log(currentUser);
@@ -69,7 +99,7 @@ const updateBookings = async (req, res, next) => {
         NOTIFICATION_TYPE.MY_CALENDER
       );
       console.log(notify);
-      return res.status(200).json({ message: `Booking ${status}` });
+      return res.status(200).json({ message: `Booking ${status}ED` });
     } else {
       return res.status(400).json({ message: `error updating booking` });
     }
@@ -244,4 +274,5 @@ module.exports = {
   createNewBooking,
   deleteBooking,
   updateBookings,
+  getAllBookings,
 };

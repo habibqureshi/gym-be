@@ -84,14 +84,14 @@ exports.updatePrivateTime = async (req, res, next) => {
   let currentTime = privateFromTime + "-" + privateToTime;
   let existPublicTime = await getTimeTableByCoachIdAndType(id, "PUBLIC");
   if (existPublicTime) {
-    console.log(
-      isRequestedTimeInRange(
-        privateFromTime,
-        privateToTime,
-        existPublicTime.from,
-        existPublicTime.to
-      )
-    );
+    // console.log(
+    //   isRequestedTimeInRange(
+    //     privateFromTime,
+    //     privateToTime,
+    //     existPublicTime.from,
+    //     existPublicTime.to
+    //   )
+    // );
     // return;
     if (
       isRequestedTimeInRange(

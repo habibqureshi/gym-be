@@ -3,7 +3,10 @@ const {
   getGymByCityId,
   getGymBySize,
   getGymById,
+  createGym,
+  updateGym,
 } = require("../../services/gym.service");
+const { getCityById } = require("../../services/city.service");
 const { getOffset } = require("../../utils/helpers/helper");
 
 exports.getGym = async (req, res, next) => {
@@ -56,6 +59,75 @@ exports.getGym = async (req, res, next) => {
         data: gyms,
       });
     }
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.createNewGym = async (req, res, next) => {
+  try {
+    const { name, cityId } = req.body;
+    if (!name || cityId === 0) {
+      console.log("Invalid Gym Name or City ");
+      return res.status(400).json({ message: "Invalid Gym Name or City" });
+    }
+    const city = await getCityById(cityId);
+    if (!city) {
+      console.log("City Not Found");
+      return res.status(400).json({ message: "City Not Found" });
+    }
+    console.log("City found");
+    const transaction = await sequelize.transaction(async (t) => {
+      const newGym = await createGym({ name, cityId });
+    });
+    return res.status(201).json({
+      ...transaction,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateGym = async (req, res, next) => {
+  try {
+    const { name, cityId } = req.body;
+    const { id } = req.query;
+    if (!name || name === "") {
+      console.log("Invalid Gym Name");
+      return res.status(400).json({ message: "Invalid Gym Name" });
+    }
+    const transaction = await sequelize.transaction(async (t) => {
+      if (cityId && cityId != 0) {
+        const city = await getCityById(stateId);
+        if (!city) {
+          console.log("City Not Found");
+          return res.status(400).json({ message: "City Not Found" });
+        }
+        console.log("city found");
+        const result = await updateGym(id, { name, cityId });
+      } else {
+        const result = await updateGym(id, { name });
+      }
+    });
+    return res.status(201).json({
+      ...transaction,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteGym = async (req, res, next) => {
+  try {
+    const { id } = req.query;
+    const transaction = await sequelize.transaction(async (t) => {
+      let enable = false,
+        deleted = false;
+      const result = await updateGym(id, { enable, deleted });
+    });
+    return res.status(201).json({
+      ...transaction,
+    });
   } catch (error) {
     next(error);
   }

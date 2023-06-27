@@ -58,3 +58,8 @@ exports.getCityById = async (id) =>
       },
     ],
   });
+
+exports.createCity = async (data) => await CityModel.create({ ...data });
+
+exports.updateCity = async (id, data) =>
+  await CityModel.update(data, { where: { id } });

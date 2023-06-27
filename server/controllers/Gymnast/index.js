@@ -21,7 +21,6 @@ exports.coachBookingsByDate = async (req, res, next) => {
       res.status(400).json({ message: "Coach Private Slot Not Found" });
     }
     let result = await getBookingByCoachIdAndDate(coachId, date);
-    // console.log(result);
     if (result.length > 0) {
       const bookingList = result.map((obj) => {
         const { from, to } = obj;
