@@ -65,7 +65,7 @@ const updateBookings = async (req, res, next) => {
       const notify = await notifyUser(
         booking.gymnastId,
         currentUser,
-        `Your private booking from ${currentUser.userName} has been ${status}ed`,
+        `Your private booking from ${currentUser.userName} has been ${status}ED`,
         NOTIFICATION_TYPE.MY_CALENDER
       );
       console.log(notify);
