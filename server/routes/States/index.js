@@ -3,6 +3,7 @@ const {
   getStates,
   createNewState,
   updateState,
+  deleteState,
 } = require("../../controllers/States");
 
 router.get("/", getStates);
