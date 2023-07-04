@@ -17,8 +17,8 @@ console.log(
 
 const sequelize = new Sequelize(
   process.env.DB || config.database,
-  process.env.USER || config.username,
-  process.env.PASSWORD || config.password,
+  process.env.DB_USER || config.username,
+  process.env.DB_PASSWORD || config.password,
   {
     dialect: config.dialect,
     host: process.env.HOST || config.host,
