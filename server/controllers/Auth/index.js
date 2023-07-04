@@ -17,6 +17,7 @@ const { getGymById } = require("../../services/gym.service");
 
 async function signIn(req, res, next) {
   try {
+    console.log("SIGN-IN");
     const { email, password, deviceToken } = req.body;
     const user = await getByUserNameOrEmail(email);
     if (user === "disabled") {
@@ -33,6 +34,7 @@ async function signIn(req, res, next) {
 
     let token = (exist && exist.token) || null;
     if (!token) {
+      console.log("generating new token for user ", user.dataValues.userName);
       token = generateJWT(user.dataValues.id);
       await saveJWT(user.dataValues.userName, user.dataValues.id, token);
     }
@@ -58,6 +60,7 @@ async function signIn(req, res, next) {
 }
 
 async function saveDeviceToken(userId, deviceToken) {
+  console.log("saving user device token");
   const user = await UserModel.findByPk(userId, {
     attributes: { exclude: ["password"] },
   });
@@ -69,7 +72,7 @@ async function saveDeviceToken(userId, deviceToken) {
 
 const create = async (req, res, next) => {
   try {
-    console.log("here");
+    console.log("SIGN-UP");
     let {
       userName,
       email,
@@ -86,23 +89,21 @@ const create = async (req, res, next) => {
       let status = "",
         private;
       if (savedRole) {
-        console.log("userType Found");
         if (savedRole.name === "coach") {
-          console.log("coach!");
+          console.log("Coach Sign-Up");
           status = "PENDING_APPROVAL";
           private = false;
         }
       } else {
-        console.log("userType Not Found");
-        res.sendStatus(400);
+        console.log("Invalid User Type");
+        res.status(400).json({ message: "Invalid User Type" });
       }
       let gym = await getGymById(gymId);
       if (!gym) {
         console.log("Gym Not Found");
-        res.sendStatus(400);
-      } else {
-        console.log("Gym Found");
+        res.status(400).json("Gym Not Found");
       }
+      console.log("Gym Found");
       const newUser = await createUser({
         userName,
         email,

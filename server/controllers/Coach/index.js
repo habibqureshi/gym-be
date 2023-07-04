@@ -15,11 +15,14 @@ const {
 const moment = require("moment");
 
 exports.getAllCoach = async (req, res, next) => {
+  console.log("fetching all coaches");
   try {
     const { id } = req.query;
     if (id) {
+      console.log("coachID: " + id);
       const coach = await getCoachById(id);
       if (!coach) {
+        console.log("Not Found");
         return res.sendStatus(204); //.json({ message: "No Record Found", data: {} })
       }
       return res.status(200).json(coach);
@@ -45,8 +48,10 @@ exports.getAllCoach = async (req, res, next) => {
 
 exports.getPrivateCoach = async (req, res, next) => {
   try {
+    console.log("getting private coaches");
     const coaches = await getPrivateCoach();
     if (!coaches) {
+      console.log("not found");
       return res.statusCode(204); //.json({ total: coaches.count, limit, currentPage: page, message: "No Data Found" })
     }
     return res.status(200).json({
@@ -57,28 +62,30 @@ exports.getPrivateCoach = async (req, res, next) => {
   }
 };
 
-const isTimeBetween = (currentTime, startTime, endTime) => {
-  const currentStart = moment(currentTime.split("-")[0], "HH:mm:ss");
-  const currentEnd = moment(currentTime.split("-")[1], "HH:mm:ss");
-  const start = moment(startTime, "HH:mm:ss");
-  const end = moment(endTime, "HH:mm:ss");
-  console.log("currentTime: ", start, end);
-  console.log("publicTime: ", startTime, endTime);
+// const isTimeBetween = (currentTime, startTime, endTime) => {
+//   const currentStart = moment(currentTime.split("-")[0], "HH:mm:ss");
+//   const currentEnd = moment(currentTime.split("-")[1], "HH:mm:ss");
+//   const start = moment(startTime, "HH:mm:ss");
+//   const end = moment(endTime, "HH:mm:ss");
+//   console.log("currentTime: ", start, end);
+//   console.log("publicTime: ", startTime, endTime);
 
-  return (
-    currentStart.isBetween(start, end, null, "[]") ||
-    currentEnd.isBetween(start, end, null, "[]")
-  );
-};
+//   return (
+//     currentStart.isBetween(start, end, null, "[]") ||
+//     currentEnd.isBetween(start, end, null, "[]")
+//   );
+// };
 
 exports.updatePrivateTime = async (req, res, next) => {
   const id = req.currentUser.dataValues.id;
   const coach = await getCoachById(id);
   const { privateFromTime, privateToTime } = req.body;
   if (!coach) {
+    console.log("coach not found");
     return res.sendStatus(204); //.json({ message: "No Record Found", data: {} })
   }
   if (!coach.private) {
+    console.log("coach private bookings not allowed");
     return res.status(400).json({ message: "Private Slots not Allowed" });
   }
   let currentTime = privateFromTime + "-" + privateToTime;

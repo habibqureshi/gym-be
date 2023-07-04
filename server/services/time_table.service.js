@@ -13,6 +13,7 @@ exports.getTimeTableByCoachIdAndType = async (id, timeType) => {
 };
 
 exports.getTimeTableByCoachId = async (id) => {
+  console.log("getting timetable by coach ID: ", id);
   return TimeTableModel.findAll({
     where: {
       coach_id: id,

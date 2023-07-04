@@ -9,6 +9,7 @@ const {
 const { Op } = require("../config").Sequelize;
 const { sign } = require("jsonwebtoken");
 const getByUserNameOrEmail = async (email) => {
+  console.log("finding user by email: ", email);
   try {
     const user = await UserModel.findOne({
       where: {
@@ -28,6 +29,7 @@ const getByUserNameOrEmail = async (email) => {
     throw new Error(error);
   }
 };
+
 const findUserToken = async (userId) =>
   await UsersTokensModel.findOne({
     where: {
@@ -35,6 +37,7 @@ const findUserToken = async (userId) =>
     },
     raw: true,
   });
+
 const getUserDetailsByToken = async (token) => {
   return await UsersTokensModel.findOne({
     where: { token },

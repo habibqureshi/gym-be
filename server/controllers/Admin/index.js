@@ -68,7 +68,7 @@ const update = async (req, res, next) => {
 
     console.log("user: ", user);
 
-    if (!user || user["roles.name"] != "coach") {
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -96,14 +96,15 @@ const update = async (req, res, next) => {
         privateToTime,
       }
     );
-    // console.log();
     if (updatedUser == 1) {
-      const notify = await notifyUser(
-        user.id,
-        currentUser,
-        "You've been approved by the Admin",
-        NOTIFICATION_TYPE.COACH
-      );
+      if (private) {
+        const notify = await notifyUser(
+          user.id,
+          currentUser,
+          "You've been approved by the Admin",
+          NOTIFICATION_TYPE.COACH
+        );
+      }
       res.status(200).json({ message: "User Updated" });
     } else {
       res.status(400).json({ message: updatedUser });
@@ -114,10 +115,4 @@ const update = async (req, res, next) => {
   }
 };
 
-const createSchedule = (req, res, next) => {
-  try {
-  } catch (error) {
-    next(error);
-  }
-};
-module.exports = { createCoach, createSchedule, update };
+module.exports = { createCoach, update };

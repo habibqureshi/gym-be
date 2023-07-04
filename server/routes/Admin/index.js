@@ -8,7 +8,6 @@ router.post(
   signUpValidatorCoach(),
   adminController.createCoach
 );
-router.post("/creteSchedule", checkAdmin, adminController.createSchedule);
-router.put("/update", adminController.update);
+router.put("/update", checkAdmin, adminController.update);
 
 module.exports = router;

@@ -75,10 +75,13 @@ const updateBookings = async (req, res, next) => {
     if (status != "ACCEPT" && status != "REJECT" && status != "CANCEL") {
       return res.status(400).json({ message: "Invalid Status" });
     }
+    console.log(status + "ING Booking");
     const booking = await getBookingById(id);
     if (!booking) {
+      console.log("booking not found");
       return res.status(400).json({ message: `booking not found` });
     }
+    console.log("booking found");
     if (!currentUser.roles.some((role) => role.name === "admin")) {
       console.log("not admin");
       if (booking.coachId != currentUser.id) {
@@ -90,7 +93,6 @@ const updateBookings = async (req, res, next) => {
       console.log("admin");
     }
     const update = await updateBookingStatus(id, status);
-    console.log(currentUser);
     if (update[0] === 1) {
       const notify = await notifyUser(
         booking.gymnastId,
@@ -110,7 +112,7 @@ const updateBookings = async (req, res, next) => {
 
 const createNewBooking = async (req, res, next) => {
   try {
-    console.log("booking user", req.currentUser.roles[0].name);
+    console.log("New Booking", req.currentUser.userName);
     const { currentUser } = req;
     const { to, from, coachId } = req.body;
     if (
@@ -140,6 +142,7 @@ const createNewBooking = async (req, res, next) => {
         .status(400)
         .json({ message: "Coach Private Schedule Not Found" });
     }
+    console.log("Coach private schedule found");
 
     let privateTimeTable = coachTimeTable.find(
       (coachTimeTable) => coachTimeTable.type === "PRIVATE"
@@ -148,10 +151,10 @@ const createNewBooking = async (req, res, next) => {
       (coachTimeTable) => coachTimeTable.type === "PUBLIC"
     );
 
-    console.log(from.split(" ")[1]);
-    console.log(to.split(" ")[1]);
-    console.log(privateTimeTable.from);
-    console.log(privateTimeTable.to);
+    // console.log(from.split(" ")[1]);
+    // console.log(to.split(" ")[1]);
+    // console.log(privateTimeTable.from);
+    // console.log(privateTimeTable.to);
     if (
       !isRequestedTimeInRange(
         from.split(" ")[1],
@@ -197,6 +200,7 @@ const createNewBooking = async (req, res, next) => {
     }
 
     const transaction = await sequelize.transaction(async (t) => {
+      console.log("Creating New Booking");
       const newBooking = await createBooking({
         gymnastId: currentUser.id,
         coachId,
@@ -204,7 +208,6 @@ const createNewBooking = async (req, res, next) => {
         from,
         status: "PENDING",
       });
-      console.log(newBooking.to);
       let message = `${currentUser.userName} has requested you for the private booking on `;
       const notify = await notifyUser(
         coach.id,
@@ -218,16 +221,11 @@ const createNewBooking = async (req, res, next) => {
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           hour12: false,
         }),
-        //   .replaceAll("/", "-")
-        //   .replace(",", "")
         from: newBooking.from.toLocaleString("en-US", {
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           hour12: false,
         }),
         status: newBooking.status,
-
-        //   .replaceAll("/", "-")
-        //   .replace(",", "")
         coach: {
           id: coach.id,
           userName: coach.userName,
