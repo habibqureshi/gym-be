@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const { authorizer } = require("./middleware/Auth/authorizer.js");
+const { sequelize } = require("./config");
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -23,6 +24,10 @@ app.use("*", (req, res, next) => {
 });
 app.use(require("./utils/error/errorHandler.js"));
 
+sequelize
+  .authenticate()
+  .then(() => console.log("db established"))
+  .catch((e) => console.log("error while connecting db", e));
 app.listen(process.env.PORT, () => {
   console.log("Server Listening ", process.env.PORT);
 });
