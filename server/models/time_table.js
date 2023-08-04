@@ -19,11 +19,11 @@ module.exports = (sequelize, Sequelize) => {
         defaultValue: "SYSTEM",
       },
       from: {
-        type: DataTypes.TIME,
+        type: DataTypes.DATE,
         allowNull: false,
       },
       to: {
-        type: DataTypes.TIME,
+        type: DataTypes.DATE,
         allowNull: false,
       },
       type: {

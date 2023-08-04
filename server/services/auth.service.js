@@ -53,6 +53,7 @@ const getUserDetailsByToken = async (token) => {
           "email",
           "enable",
           "deleted",
+          "gymId",
         ],
         include: [
           {

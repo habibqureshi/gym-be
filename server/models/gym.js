@@ -22,6 +22,9 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: false,
         defaultValue: false,
       },
+      cityId: {
+        type: Sequelize.INTEGER(11),
+      },
     },
     {
       timestamps: true,

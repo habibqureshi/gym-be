@@ -72,6 +72,10 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.STRING(500),
         allowNull: true,
       },
+      stripeId: {
+        type: Sequelize.STRING(500),
+        allowNull: true,
+      },
     },
     {
       timestamps: true,

@@ -1,4 +1,10 @@
-const { GymModel, CityModel, StateModel } = require("../models");
+const {
+  GymModel,
+  CityModel,
+  StateModel,
+  GymScheduleModel,
+} = require("../models");
+const { Sequelize } = require("../config/index");
 
 exports.getGymBySize = async ({ limit, offset }) =>
   await GymModel.findAndCountAll({
@@ -63,3 +69,30 @@ exports.createGym = async (data) => await GymModel.create({ ...data });
 
 exports.updateGym = async (id, data) =>
   await GymModel.update(data, { where: { id } });
+
+exports.saveSchedule = async (data) =>
+  await GymScheduleModel.create({
+    ...data,
+  });
+
+exports.existsScheduleForGymAndDate = async function (gymId, from) {
+  const existingSchedule = await GymScheduleModel.findOne({
+    where: {
+      gymId: gymId,
+      from: {
+        [Sequelize.Op.gte]: from + " 00:00:00", // Start of the fromDate (00:00:00 time)
+        [Sequelize.Op.lt]: from + " 23:59:59", // End of the fromDate (23:59:59 time)
+      },
+    },
+  });
+  return existingSchedule;
+};
+
+exports.existsScheduleForGym = async function (gymId) {
+  const existingSchedule = await GymScheduleModel.findAll({
+    where: {
+      gymId: gymId,
+    },
+  });
+  return existingSchedule;
+};

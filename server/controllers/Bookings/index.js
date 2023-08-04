@@ -11,7 +11,24 @@ const {
 } = require("../../services/booking.service");
 const { notifyUser } = require("../Notification");
 const { getCoachById } = require("../../services/coach.service");
-const { getTimeTableByCoachId } = require("../../services/time_table.service");
+const {
+  getGymnastById,
+  updateGymnastStripeId,
+} = require("../../services/gymnast.service");
+const {
+  createCustomer,
+  createPaymentMethod,
+  createEphemralKey,
+  createPaymentIntent,
+  getPaymentMethodsByCustomerId,
+  getPaymentMethodsByCustomerIdAndPaymentMethodId,
+  attachCustomerWithPaymentMethod,
+} = require("../../services/stripe");
+const { getChildrenByIdAndParent } = require("../../services/gymnast.service");
+const {
+  getTimeTableByCoachId,
+  getTimeTableByCoachIdAndTypeAndDate,
+} = require("../../services/time_table.service");
 const { getOffset } = require("../../utils/helpers/helper");
 const { isRequestedTimeInRange } = require("../../utils/validators/validators");
 const { NOTIFICATION_TYPE } = require("../../utils/helpers/helper");
@@ -114,7 +131,7 @@ const createNewBooking = async (req, res, next) => {
   try {
     console.log("New Booking", req.currentUser.userName);
     const { currentUser } = req;
-    const { to, from, coachId } = req.body;
+    const { to, from, coachId, childrenId } = req.body;
     if (
       coachId === currentUser.id ||
       req.currentUser.roles[0].name === "coach"
@@ -123,7 +140,7 @@ const createNewBooking = async (req, res, next) => {
         .status(400)
         .json({ message: "Can't Create Booking with self" });
     }
-    if (!(coachId && to && from)) {
+    if (!(coachId || to || from || childrenId)) {
       return res.status(400).json({ message: "Invalid Request Parameters" });
     }
     const coach = await getCoachById(coachId);
@@ -136,38 +153,70 @@ const createNewBooking = async (req, res, next) => {
         .status(400)
         .json({ message: "Coach Not Allowed for Private Bookings" });
     }
-    let coachTimeTable = await getTimeTableByCoachId(coach.id);
-    if (!coachTimeTable) {
+
+    const fromDateOnly = new Date(from).toISOString().split("T")[0];
+
+    let coachTimeTable = await getTimeTableByCoachIdAndTypeAndDate(
+      coach.id,
+      "PRIVATE",
+      fromDateOnly
+    );
+    if (coachTimeTable.length === 0) {
       return res
         .status(400)
         .json({ message: "Coach Private Schedule Not Found" });
     }
     console.log("Coach private schedule found");
+    console.log(coachTimeTable);
 
-    let privateTimeTable = coachTimeTable.find(
-      (coachTimeTable) => coachTimeTable.type === "PRIVATE"
+    const child = await getChildrenByIdAndParent(
+      childrenId,
+      currentUser.dataValues.id
     );
-    let publicTimeTable = coachTimeTable.find(
-      (coachTimeTable) => coachTimeTable.type === "PUBLIC"
-    );
-
-    // console.log(from.split(" ")[1]);
-    // console.log(to.split(" ")[1]);
-    // console.log(privateTimeTable.from);
-    // console.log(privateTimeTable.to);
-    if (
-      !isRequestedTimeInRange(
-        from.split(" ")[1],
-        to.split(" ")[1],
-        privateTimeTable.from,
-        privateTimeTable.to
-      )
-    ) {
-      return res
-        .status(400)
-        .json({ message: "Requested time not in Coach Private Slots" });
+    if (child === null) {
+      return res.status(400).json({ message: "Child Not Found" });
     }
-    console.log("privateTimePass");
+    console.log(child);
+
+    // let privateTimeTable = coachTimeTable.find(
+    //   (coachTimeTable) => coachTimeTable.type === "PRIVATE"
+    // );
+    // let publicTimeTable = coachTimeTable.find(
+    //   (coachTimeTable) => coachTimeTable.type === "PUBLIC"
+    // );
+
+    // if (
+    //   !isRequestedTimeInRange(
+    //     from.split(" ")[1],
+    //     to.split(" ")[1],
+    //     privateTimeTable.from,
+    //     privateTimeTable.to
+    //   )
+    // ) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "Requested time not in Coach Private Slots" });
+    // }
+
+    let temp;
+    if (coachTimeTable.length > 0) {
+      console.log("TimeTablePrivate: ");
+      for (const privateTimeSlot of coachTimeTable) {
+        if (
+          isRequestedTimeInRange(
+            from,
+            to,
+            privateTimeSlot.from,
+            privateTimeSlot.to
+          )
+        ) {
+          console.log("privateTimePass: ");
+          temp = privateTimeSlot;
+          break;
+        }
+      }
+    }
+    // return;
     let bookings = await getBookingByCoachId(coach.id);
 
     if (bookings.length > 0) {
@@ -202,7 +251,7 @@ const createNewBooking = async (req, res, next) => {
     const transaction = await sequelize.transaction(async (t) => {
       console.log("Creating New Booking");
       const newBooking = await createBooking({
-        gymnastId: currentUser.id,
+        childrenId: childrenId,
         coachId,
         to,
         from,
@@ -267,10 +316,132 @@ const deleteBooking = async (req, res, next) => {
     next(error);
   }
 };
+
+const confirmCheckout = async (req, res, next) => {
+  console.log("confirm checkout");
+  const { currentUser } = req;
+  console.log(currentUser);
+  let customer = await getGymnastById(currentUser.dataValues.id);
+  if (!customer) {
+    res
+      .status(400)
+      .json({ message: "user donot have stripe ID and payment methods" });
+  }
+  const { paymentMethod, paymentMethodId } = req.body;
+  if (paymentMethodId) {
+    let result = await getPaymentMethodsByCustomerIdAndPaymentMethodId(
+      customer.stripeId,
+      paymentMethodId
+    );
+    console.log(result);
+  } else if (paymentMethod) {
+    console.log(
+      "creating new paymentMethod for stripe customer: ",
+      customer.stripeId
+    );
+    let paymentIntent = await createPaymentIntent({
+      customerStripeID: stripeCustomerId,
+      price: 200 * 100,
+    });
+    if (!paymentIntent) {
+      res
+        .status(400)
+        .json({ message: "Error while creating Payment Intent on stripe" });
+    }
+    console.log(
+      "paymentIntent created successfully for customer: " +
+        stripeCustomerId +
+        " with id: " +
+        paymentIntent.id
+    );
+    // let newPaymentMethod = await createPaymentMethod(paymentMethod);
+    // console.log(newPaymentMethod);
+    // let result = await attachCustomerWithPaymentMethod(
+    //   newPaymentMethod.id,
+    //   customer.stripeId
+    // );
+    // console.log(result);
+  }
+};
+
+const checkout = async (req, res, next) => {
+  console.log("checkout");
+  const { currentUser } = req;
+  if (!req.query.id) {
+    return res.status(400).json({ message: "Invalid Booking ID" });
+  }
+  let booking = await getBookingById(req.query.id);
+  if (!booking) {
+    return res.status(400).json({ message: "Booking Not Found" });
+  }
+  // console.log("booking: ", booking);
+  let customer = await getGymnastById(booking.gymnastId);
+  let stripeCustomerId;
+  if (!customer || customer.id != currentUser.id) {
+    return res.status(400).json({ message: "Invalid User" });
+  }
+  // console.log(customer);
+  if (!customer.stripeId) {
+    console.log(
+      "customer stripe id not exist, creating new customer on Stripe"
+    );
+    let stripeCustomer = await createCustomer();
+    if (!stripeCustomer) {
+      return res
+        .status(400)
+        .json({ message: "Error while creating customer on stripe" });
+    }
+    console.log(
+      "stripeCustomer created successfully with id: ",
+      stripeCustomer.id
+    );
+    stripeCustomerId = stripeCustomer.id;
+    await updateGymnastStripeId(customer.id, stripeCustomerId);
+    // return res.sendStatus(200);
+  } else {
+    console.log("stripe Id exist for customer");
+    stripeCustomerId = customer.stripeId;
+    let paymentMethod = await getPaymentMethodsByCustomerId(stripeCustomerId);
+    console.log(paymentMethod.data);
+    if (paymentMethod.data.length == 0) {
+      console.log("no payment method found");
+    }
+    let obj = {
+      customerKey: stripeCustomerId,
+      paymentMethods: paymentMethod.data,
+    };
+    return res.status(200).json(obj);
+  }
+  console.log("here");
+  const ephemeralKey = await createEphemralKey(stripeCustomerId);
+
+  console.log("CustomerID: ", stripeCustomerId);
+  console.log("Ephemeral Key: ", ephemeralKey);
+  // let paymentIntent = await createPaymentIntent({
+  //   customerStripeID: stripeCustomerId,
+  //   price: 200 * 10,
+  // });
+  // if (!paymentIntent) {
+  //   res
+  //     .status(400)
+  //     .json({ message: "Error while creating Payment Intent on stripe" });
+  // }
+  // console.log(
+  //   "paymentIntent created successfully for customer: " +
+  //     stripeCustomerId +
+  //     " with id: " +
+  //     paymentIntent.id
+  // );
+  // console.log("PaymentIntenet: ", paymentIntent);
+  // return res.status(200).json(paymentIntent);
+};
+
 module.exports = {
   myBookings,
   createNewBooking,
   deleteBooking,
   updateBookings,
   getAllBookings,
+  checkout,
+  confirmCheckout,
 };

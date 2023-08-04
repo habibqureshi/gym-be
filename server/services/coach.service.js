@@ -4,8 +4,12 @@ const {
   ScheduleModel,
   TimeTableModel,
 } = require("../models");
-const { getTimeTableByCoachIdAndType } = require("./time_table.service");
+const {
+  getTimeTableByCoachIdAndType,
+  getTimeTableByCoachIdAndTypeAndDate,
+} = require("./time_table.service");
 const { getBookingByCoachIdAndDate } = require("./booking.service");
+const { Op } = require("../config").Sequelize;
 
 exports.getAvailableCoach = async ({ limit, offset }) =>
   await UserModel.findAndCountAll({
@@ -46,6 +50,7 @@ exports.getCoachById = async (id) =>
       "image",
       "private",
       "status",
+      "gymId",
     ],
 
     include: [
@@ -96,33 +101,74 @@ exports.getMySchedules = async ({ limit, offset, id }) =>
     offset,
   });
 
-exports.updateCoachPrivateSlots = async (coach, privateTime) => {
-  console.log("coach id: ", coach);
-  console.log("priateTime: ", privateTime);
-  let time = {
-    to: privateTime.privateToTime,
-    from: privateTime.privateFromTime,
-    type: "PRIVATE",
-    enable: true,
-    deleted: false,
-    coachId: coach,
-    createdBy: "COACH",
-  };
-  let existPrivateTime = await getTimeTableByCoachIdAndType(coach, "PRIVATE");
-  if (!existPrivateTime) {
-    console.log("No Open Slot Found for Coach: ", coach);
+exports.addCoachPrivateSlots = async (
+  coach,
+  from,
+  to,
+  scheduleType,
+  createdBy
+) => {
+  try {
+    console.log("coach id: ", coach, from, to, scheduleType);
+    let time = {
+      to,
+      from,
+      type: scheduleType,
+      enable: true,
+      deleted: false,
+      coachId: coach,
+      createdBy: createdBy,
+    };
+
     return await TimeTableModel.create({ ...time });
-  } else {
-    // console.log(existPrivateTime);
-    let id = existPrivateTime.id;
-    // console.log("private slot id: ", id);
-    return await TimeTableModel.update(time, { where: { id } });
+  } catch (error) {
+    console.log(error);
   }
 };
 
 exports.getPublicSlots = async (coach) => {
   console.log("coach id: ", coach);
   return await getTimeTableByCoachIdAndType(coach, "PUBLIC");
+};
+
+exports.getCoachSchedule = async (id, start, end) => {
+  return await TimeTableModel.findAll({
+    where: {
+      coachId: id,
+      from: {
+        [Op.between]: [`${start} 00:00:00`, `${end} 23:59:59`],
+      },
+      to: {
+        [Op.between]: [`${start} 00:00:00`, `${end} 23:59:59`],
+      },
+    },
+    raw: true,
+  });
+};
+
+exports.getCoachScheduleById = async (id, coachId) => {
+  return await TimeTableModel.findAll({
+    where: {
+      id,
+      coachId: coachId,
+    },
+    raw: true,
+  });
+};
+
+exports.deleteCoachScheduleById = async (id, coachId) => {
+  return await TimeTableModel.destroy({
+    where: {
+      id,
+      coachId: coachId,
+    },
+  }).then((rowsDeleted) => {
+    if (rowsDeleted === 0) {
+      console.log("TimeTable not found.");
+    } else {
+      console.log("TimeTable deleted successfully.");
+    }
+  });
 };
 
 exports.getCoachBookingsByDate = async (coach, date) => {

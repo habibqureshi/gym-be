@@ -1,5 +1,6 @@
 const { UserModel, BookingsModel, RoleModel } = require("../models");
 const { Op } = require("../config").Sequelize;
+const { Sequelize } = require("../config/index");
 
 const getBookingById = async (id) =>
   await BookingsModel.findOne({
@@ -30,21 +31,13 @@ const getBookingByCoachId = async (coachId) =>
   });
 
 const getBookingByCoachIdAndDate = async (coachId, date) => {
-  console.log(coachId, date);
-  const formattedDate = new Date(
-    `${date.slice(6, 10)}-${date.slice(3, 5)}-${date.slice(0, 2)}`
-  );
-  const formattedDateISOString = formattedDate.toISOString();
-
   const bookings = await BookingsModel.findAll({
     where: {
       deleted: false,
       coachId,
       from: {
-        [Op.gte]: formattedDateISOString,
-        [Op.lt]: new Date(
-          formattedDate.getTime() + 24 * 60 * 60 * 1000
-        ).toISOString(),
+        [Sequelize.Op.gte]: date + " 00:00:00", // Start of the fromDate (00:00:00 time)
+        [Sequelize.Op.lt]: date + " 23:59:59", // End of the fromDate (23:59:59 time)
       },
       status: {
         [Op.notIn]: ["REJECT", "CANCEL"],

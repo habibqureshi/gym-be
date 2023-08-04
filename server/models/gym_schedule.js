@@ -1,7 +1,7 @@
 module.exports = (sequelize, Sequelize) => {
   const { DataTypes } = Sequelize;
-  const Bookings = sequelize.define(
-    "bookings",
+  const GymSchedule = sequelize.define(
+    "gym_schedule",
     {
       id: {
         type: DataTypes.INTEGER(11),
@@ -9,39 +9,21 @@ module.exports = (sequelize, Sequelize) => {
         autoIncrement: true,
         primaryKey: true,
       },
-      childrenId: {
+      gymId: {
         type: DataTypes.INTEGER(11),
-        allowNull: false,
-      },
-      coachId: {
-        type: DataTypes.INTEGER(11),
-        allowNull: false,
-      },
-      createdBy: {
-        type: DataTypes.STRING(100),
-        allowNull: false,
-        defaultValue: "SYSTEM",
-      },
-      to: {
-        type: DataTypes.DATE,
         allowNull: false,
       },
       from: {
         type: DataTypes.DATE,
         allowNull: false,
       },
-      enable: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: true,
-      },
-      deleted: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
+      to: {
+        type: DataTypes.DATE,
+        allowNull: false,
       },
       status: {
         type: DataTypes.STRING(100),
-        allowNull: false,
-        defaultValue: "PENDING",
+        allowNull: true,
       },
     },
     {
@@ -49,8 +31,8 @@ module.exports = (sequelize, Sequelize) => {
       timestamps: true,
       freezeTableName: true,
       // define the table's name
-      tableName: "bookings",
+      tableName: "gym_schedule",
     }
   );
-  return Bookings;
+  return GymSchedule;
 };

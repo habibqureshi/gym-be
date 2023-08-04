@@ -162,10 +162,19 @@ function isRequestedTimeInRange(
   bookedFrom,
   bookedTo
 ) {
-  const requestedStartTime = requestedFrom;
-  const requestedEndTime = requestedTo;
-  const bookedStartTime = bookedFrom;
-  const bookedEndTime = bookedTo;
+  const requestedStartTime = new Date(requestedFrom).getTime();
+  const requestedEndTime = new Date(requestedTo).getTime();
+  const bookedStartTime = new Date(bookedFrom).getTime();
+  const bookedEndTime = new Date(bookedTo).getTime();
+
+  console.log(
+    "YO:",
+    requestedStartTime,
+    requestedEndTime,
+    bookedStartTime,
+    bookedEndTime,
+    "end"
+  );
 
   return (
     (requestedStartTime >= bookedStartTime &&
@@ -175,6 +184,22 @@ function isRequestedTimeInRange(
   );
 }
 
+function isTimeInGymRange(
+  requestedFromTime,
+  requestedToTime,
+  fromTime,
+  toTime
+) {
+  const requestedFromDate = new Date(requestedFromTime).getTime();
+  const requestedToDate = new Date(requestedToTime).getTime();
+  const fromDate = new Date(fromTime).getTime();
+  const toDate = new Date(toTime).getTime();
+
+  // Check if the requested "from" time is after or equal to the "from" time of the range,
+  // and if the requested "to" time is before or equal to the "to" time of the range.
+  return requestedFromDate >= fromDate && requestedToDate <= toDate;
+}
+
 module.exports = {
   signInValidator,
   signUpValidatorUser,
@@ -182,4 +207,5 @@ module.exports = {
   isTimeBetween,
   isRequestedDateTimeInRange,
   isRequestedTimeInRange,
+  isTimeInGymRange,
 };

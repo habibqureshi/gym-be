@@ -1,6 +1,6 @@
 module.exports = (sequelize, Sequelize) => {
-  const City = sequelize.define(
-    "city",
+  const Children = sequelize.define(
+    "children",
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -8,9 +8,14 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: false,
         autoIncrement: true,
       },
+      userId: {
+        type: Sequelize.INTEGER(11),
+        allowNull: false,
+      },
       name: {
         type: Sequelize.STRING(100),
         allowNull: false,
+        unique: true,
       },
       enable: {
         type: Sequelize.BOOLEAN,
@@ -22,16 +27,13 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: false,
         defaultValue: false,
       },
-      stateId: {
-        type: Sequelize.INTEGER(11),
-      },
     },
     {
       timestamps: true,
       freezeTableName: true,
-      tableName: "city",
+      tableName: "children",
       underscored: true,
     }
   );
-  return City;
+  return Children;
 };
