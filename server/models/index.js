@@ -27,6 +27,9 @@ UserModel.belongsToMany(RoleModel, {
   timestamps: false,
 });
 
+UserModel.belongsTo(GymModel, { foreignKey: "gym_id" });
+// GymModel.belongsTo(UserModel);
+
 GymModel.hasMany(GymScheduleModel, { foreignKey: "gym_id" });
 BookingsModel.belongsTo(UserModel, { as: "coach", foreignKey: "coach_id" });
 // BookingsModel.belongsTo(UserModel, { as: "gymnast", foreignKey: "gymnast_id" });
@@ -76,7 +79,7 @@ UserModel.hasMany(NotificationModel, {
 
 DeviceTokensModel.belongsTo(UserModel, { foreignKey: "user_id" });
 UserModel.hasMany(DeviceTokensModel);
-UserModel.hasMany(Children);
+UserModel.hasMany(Children, { foreignKey: "user_id" });
 
 // sequelize.sync().then(() => {
 //     console.log('Database Synchronized')

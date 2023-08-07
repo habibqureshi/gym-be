@@ -1,6 +1,6 @@
 // // localhost
 const config = {
-  host: "35.224.53.186",
+  host: "localhost",
   port: 3306,
   database: "gym",
   username: "root",

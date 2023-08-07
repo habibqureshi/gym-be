@@ -30,6 +30,21 @@ const getBookingByCoachId = async (coachId) =>
     raw: true,
   });
 
+const getBookingByChildrenIds = async ({ childrenId, limit, offset }) =>
+  await BookingsModel.findAndCountAll({
+    where: {
+      deleted: false,
+      childrenId: childrenId,
+      status: {
+        [Op.ne]: "REJECT",
+      },
+    },
+    raw: true,
+    order: [["id", "DESC"]],
+    limit,
+    offset,
+  });
+
 const getBookingByCoachIdAndDate = async (coachId, date) => {
   const bookings = await BookingsModel.findAll({
     where: {
@@ -72,7 +87,7 @@ const getAllBookingsByUserId = async ({ id, limit, offset }) =>
   await BookingsModel.findAndCountAll({
     where: {
       deleted: false,
-      [Op.or]: [{ coachId: id }, { gymnastId: id }],
+      [Op.or]: [{ coachId: id }],
     },
     attributes: ["id", "to", "from", "status"],
     include: [
@@ -84,14 +99,14 @@ const getAllBookingsByUserId = async ({ id, limit, offset }) =>
           deleted: false,
         },
       },
-      {
-        model: UserModel,
-        as: "gymnast",
-        attributes: ["id", "firstName", "userName", "lastName"],
-        where: {
-          deleted: false,
-        },
-      },
+      // {
+      //   model: UserModel,
+      //   as: "gymnast",
+      //   attributes: ["id", "firstName", "userName", "lastName"],
+      //   where: {
+      //     deleted: false,
+      //   },
+      // },
     ],
     order: [["id", "DESC"]],
     limit,
@@ -139,4 +154,5 @@ module.exports = {
   getAllBookingsByGymnastId,
   updateBookingStatus,
   getBookings,
+  getBookingByChildrenIds,
 };

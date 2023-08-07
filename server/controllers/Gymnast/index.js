@@ -26,8 +26,9 @@ exports.coachBookingsByDate = async (req, res, next) => {
       "PRIVATE",
       date
     );
-    if (!timeTable) {
-      res.status(400).json({ message: "Coach Private Slot Not Found" });
+    console.log("Timetable: ", timeTable);
+    if (timeTable.length === 0) {
+      return res.status(400).json({ message: "Coach Private Slot Not Found" });
     }
     console.log(timeTable);
     let result = await getBookingByCoachIdAndDate(coachId, date);

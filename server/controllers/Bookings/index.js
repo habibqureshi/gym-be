@@ -7,6 +7,7 @@ const {
   getAllBookingsByUserId,
   getBookingByCoachId,
   updateBookingStatus,
+  getBookingByChildrenIds,
   getBookings,
 } = require("../../services/booking.service");
 const { notifyUser } = require("../Notification");
@@ -24,7 +25,10 @@ const {
   getPaymentMethodsByCustomerIdAndPaymentMethodId,
   attachCustomerWithPaymentMethod,
 } = require("../../services/stripe");
-const { getChildrenByIdAndParent } = require("../../services/gymnast.service");
+const {
+  getChildrenByIdAndParent,
+  getChildren,
+} = require("../../services/gymnast.service");
 const {
   getTimeTableByCoachId,
   getTimeTableByCoachIdAndTypeAndDate,
@@ -66,8 +70,58 @@ const myBookings = async (req, res, next) => {
     limit = +limit;
     page = +page;
     const offset = getOffset({ limit, page });
+    if (
+      !currentUser.roles.some(
+        (role) =>
+          role.name === "coach" ||
+          role.name === "admin" ||
+          role.name === "gymnast"
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ message: "user is not a coach user or gymnast or admin" });
+    }
+    let id;
+    let createdBy;
+    if (
+      !currentUser.roles.some(
+        (role) => role.name === "coach" || role.name === "gymnast"
+      )
+    ) {
+      const { coach } = req.query;
+      if (!coach || coach === 0) {
+        return res.status(400).json({ message: "coach id is required" });
+      }
+      id = coach;
+      createdBy = "ADMIN";
+    } else {
+      if (currentUser.roles.some((role) => role.name === "gymnast")) {
+        console.log("gymnast");
+        let childrens = await getChildren(currentUser.id);
+        const childrenIds = childrens.map((item) => item.id);
+        console.log(childrenIds);
+        let bookings = await getBookingByChildrenIds({
+          childrenId: childrenIds,
+          limit,
+          offset,
+        });
+        if (bookings.length === 0) {
+          return res.status(200).json({ message: "No Data Found" });
+        }
+        return res.status(200).json({
+          total: bookings.count,
+          limit,
+          currentPage: page,
+          data: bookings.rows,
+        });
+      } else {
+        id = currentUser.dataValues.id;
+      }
+    }
+
     const bookings = await getAllBookingsByUserId({
-      id: currentUser.id,
+      id: id,
       limit,
       offset,
     });
@@ -110,14 +164,15 @@ const updateBookings = async (req, res, next) => {
       console.log("admin");
     }
     const update = await updateBookingStatus(id, status);
+    console.log(update);
     if (update[0] === 1) {
-      const notify = await notifyUser(
-        booking.gymnastId,
-        currentUser,
-        `Your private booking from ${currentUser.userName} has been ${status}ED`,
-        NOTIFICATION_TYPE.MY_CALENDER
-      );
-      console.log(notify);
+      // const notify = await notifyUser(
+      //   booking.gymnastId,
+      //   currentUser,
+      //   `Your private booking from ${currentUser.userName} has been ${status}ED`,
+      //   NOTIFICATION_TYPE.MY_CALENDER
+      // );
+      // console.log(notify);
       return res.status(200).json({ message: `Booking ${status}ED` });
     } else {
       return res.status(400).json({ message: `error updating booking` });

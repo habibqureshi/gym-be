@@ -3,6 +3,7 @@ const {
   UserModel,
   ScheduleModel,
   TimeTableModel,
+  GymModel,
 } = require("../models");
 const {
   getTimeTableByCoachIdAndType,
@@ -26,9 +27,9 @@ exports.getAvailableCoach = async ({ limit, offset }) =>
     ],
     include: [
       {
-        model: RoleModel,
+        model: GymModel,
         attributes: ["id", "name"],
-        where: { name: "coach", deleted: false },
+        required: true,
       },
     ],
     order: ["id"],
@@ -55,9 +56,8 @@ exports.getCoachById = async (id) =>
 
     include: [
       {
-        model: RoleModel,
+        model: GymModel,
         attributes: ["id", "name"],
-        where: { name: "coach" },
       },
     ],
     raw: true,
