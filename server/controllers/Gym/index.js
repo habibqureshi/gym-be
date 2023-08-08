@@ -166,7 +166,6 @@ exports.createGymSchedule = async (req, res, next) => {
     // console.log(currentUser.roles[0].dataValues);
     console.log(currentUser.roles.some((role) => role.name === "gym"));
     if (
-      currentUser.dataValues.gymId == 0 ||
       !currentUser.roles.some(
         (role) => role.name === "gym" || role.name === "admin"
       )
@@ -184,6 +183,9 @@ exports.createGymSchedule = async (req, res, next) => {
       gymId = gym;
     } else {
       gymId = currentUser.dataValues.gymId;
+      if (gymId === 0) {
+        return res.status(400).json({ message: "gym id is required" });
+      }
       console.log("gym user");
     }
 

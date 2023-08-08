@@ -4,6 +4,7 @@ const {
   ScheduleModel,
   TimeTableModel,
   Children,
+  GymModel,
 } = require("../models");
 
 exports.getGymnastById = async (id) =>
@@ -74,6 +75,32 @@ exports.getChildrenByIdAndParent = async (id, parentId) => {
       deleted: false,
     },
     attributes: ["id", "name"],
+    raw: true,
+  });
+};
+
+exports.getAllGymnast = async () => {
+  return await UserModel.findAndCountAll({
+    where: {
+      deleted: false,
+    },
+    attributes: [
+      "id",
+      "userName",
+      "firstName",
+      "lastName",
+      "phoneNumber",
+      "image",
+      "stripeId",
+    ],
+
+    include: [
+      {
+        model: RoleModel,
+        attributes: ["id", "name"],
+        where: { name: "gymnast" },
+      },
+    ],
     raw: true,
   });
 };

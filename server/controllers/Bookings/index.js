@@ -44,20 +44,50 @@ const getAllBookings = async (req, res, next) => {
     limit = +limit;
     page = +page;
     const offset = getOffset({ limit, page });
-    const bookings = await getBookings({
-      id: currentUser.id,
-      limit,
-      offset,
-    });
-    if (bookings.length === 0) {
-      return res.status(200).json({ message: "No Data Found" });
+    if (currentUser.roles.some((role) => role.name === "admin")) {
+      console.log("admin");
+      const { gymnast, coach } = req.query;
+      if ((!gymnast || gymnast === 0) && (!coach || coach === 0)) {
+        return res.status(400).json({ message: "Coach or Gymnast Required" });
+      }
+      if (gymnast) {
+        console.log("gymnast");
+        let childrens = await getChildren(gymnast);
+        const childrenIds = childrens.map((item) => item.id);
+        console.log(childrenIds);
+        let bookings = await getBookingByChildrenIds({
+          childrenId: childrenIds,
+          limit,
+          offset,
+        });
+        if (bookings.length === 0) {
+          return res.status(200).json({ message: "No Data Found" });
+        }
+        return res.status(200).json({
+          total: bookings.count,
+          limit,
+          currentPage: page,
+          data: bookings.rows,
+        });
+      } else {
+        console.log("coach");
+        let bookings = await getBookings({
+          id: coach,
+          limit,
+          offset,
+        });
+        console.log(bookings);
+        if (!bookings || bookings.length === 0) {
+          return res.status(200).json({ message: "No Data Found" });
+        }
+        return res.status(200).json({
+          total: bookings.count,
+          limit,
+          currentPage: page,
+          data: bookings.rows,
+        });
+      }
     }
-    return res.status(200).json({
-      total: bookings.count,
-      limit,
-      currentPage: page,
-      data: bookings.rows,
-    });
   } catch (error) {
     next(error);
   }
@@ -83,18 +113,20 @@ const myBookings = async (req, res, next) => {
         .json({ message: "user is not a coach user or gymnast or admin" });
     }
     let id;
-    let createdBy;
     if (
       !currentUser.roles.some(
         (role) => role.name === "coach" || role.name === "gymnast"
       )
     ) {
-      const { coach } = req.query;
-      if (!coach || coach === 0) {
-        return res.status(400).json({ message: "coach id is required" });
+      const { coach, gymnast } = req.query;
+      if (gymnast === 0 && coach === 0) {
+        return res.status(400).json({ message: "Coach or Gymnast Required" });
       }
-      id = coach;
-      createdBy = "ADMIN";
+      if (gymnast != 0) {
+        id = gymnast;
+      } else {
+        id = coach;
+      }
     } else {
       if (currentUser.roles.some((role) => role.name === "gymnast")) {
         console.log("gymnast");
@@ -228,7 +260,7 @@ const createNewBooking = async (req, res, next) => {
       childrenId,
       currentUser.dataValues.id
     );
-    if (child === null) {
+    if (!child || child === null) {
       return res.status(400).json({ message: "Child Not Found" });
     }
     console.log(child);

@@ -8,7 +8,11 @@ const {
   getTimeTableByCoachIdAndTypeAndDate,
 } = require("../../services/time_table.service");
 
-const { saveChildren, getChildren } = require("../../services/gymnast.service");
+const {
+  saveChildren,
+  getChildren,
+  getAllGymnast,
+} = require("../../services/gymnast.service");
 
 exports.coachBookingsByDate = async (req, res, next) => {
   try {
@@ -35,14 +39,8 @@ exports.coachBookingsByDate = async (req, res, next) => {
     if (result.length > 0) {
       const bookingList = result.map((obj) => {
         const { from, to } = obj;
-        let currentFrom = from.toLocaleString("en-US", {
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          hour12: false,
-        });
-        let currentTo = to.toLocaleString("en-US", {
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          hour12: false,
-        });
+        let currentFrom = from;
+        let currentTo = to;
         return { currentFrom, currentTo };
       });
 
@@ -56,6 +54,22 @@ exports.coachBookingsByDate = async (req, res, next) => {
         bookings: [],
       });
     }
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getAllGymnast = async (req, res, next) => {
+  try {
+    const { currentUser } = req;
+    if (!currentUser.roles.some((role) => role.name === "admin")) {
+      return res.status(400).json({ message: "user is not a admin" });
+    }
+    const gymnast = await getAllGymnast();
+    if (!gymnast) {
+      return res.status(201).json({ message: "No Data Found" });
+    }
+    return res.status(200).json(gymnast);
   } catch (error) {
     next(error);
   }
@@ -90,10 +104,22 @@ exports.getChildrenByUserId = async (req, res, next) => {
   try {
     console.log("getting children");
     const { currentUser } = req;
-    if (!currentUser.roles.some((role) => role.name === "gymnast")) {
+    if (
+      !currentUser.roles.some(
+        (role) => role.name === "gymnast" || role.name === "admin"
+      )
+    ) {
       return res.status(400).json({ message: "user is not a gymnast" });
     }
-    const userId = currentUser.dataValues.id;
+    let userId;
+    if (currentUser.roles.some((role) => role.name === "admin")) {
+      const { gymnast } = req.query;
+      if (gymnast != 0) {
+        userId = gymnast;
+      }
+    } else {
+      userId = currentUser.dataValues.id;
+    }
     const result = await getChildren(userId);
     if (result) {
       return res.status(200).json({ result });

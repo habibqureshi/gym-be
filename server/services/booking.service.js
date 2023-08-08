@@ -72,16 +72,16 @@ const deleteBookingById = async (id) =>
     { where: { id } }
   );
 
-const getBookings = async ({ limit, offset }) => {
+const getBookings = async ({ id, limit, offset }) =>
   await BookingsModel.findAndCountAll({
     where: {
       deleted: false,
+      coachId: id,
     },
     order: [["id", "DESC"]],
     limit,
     offset,
   });
-};
 
 const getAllBookingsByUserId = async ({ id, limit, offset }) =>
   await BookingsModel.findAndCountAll({
