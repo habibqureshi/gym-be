@@ -157,7 +157,7 @@ const myBookings = async (req, res, next) => {
       limit,
       offset,
     });
-    if (bookings.length === 0) {
+    if (!bookings || bookings.length === 0) {
       return res.status(200).json({ message: "No Data Found" });
     }
     return res.status(200).json({

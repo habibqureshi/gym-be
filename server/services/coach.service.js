@@ -36,6 +36,7 @@ exports.getAvailableCoach = async ({ limit, offset }) =>
     limit,
     offset,
   });
+
 exports.getCoachById = async (id) =>
   await UserModel.findOne({
     where: {
@@ -59,9 +60,17 @@ exports.getCoachById = async (id) =>
         model: GymModel,
         attributes: ["id", "name"],
       },
+      {
+        model: RoleModel,
+        attributes: ["id", "name"],
+        where: {
+          name: "COACH",
+        },
+      },
     ],
     raw: true,
   });
+
 exports.getPrivateCoach = async () =>
   await UserModel.findAll({
     where: {
@@ -79,26 +88,6 @@ exports.getPrivateCoach = async () =>
       "status",
     ],
     raw: true,
-  });
-exports.saveSchedule = async (data) =>
-  await ScheduleModel.create({
-    ...data,
-  });
-exports.getMySchedules = async ({ limit, offset, id }) =>
-  await ScheduleModel.findAndCountAll({
-    where: {
-      coachId: id,
-      deleted: false,
-    },
-    include: [
-      {
-        model: UserModel,
-        attributes: ["name", "userName", "image"],
-        where: { deleted: false },
-      },
-    ],
-    limit,
-    offset,
   });
 
 exports.addCoachPrivateSlots = async (

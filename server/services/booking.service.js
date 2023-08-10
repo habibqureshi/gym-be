@@ -99,49 +99,12 @@ const getAllBookingsByUserId = async ({ id, limit, offset }) =>
           deleted: false,
         },
       },
-      // {
-      //   model: UserModel,
-      //   as: "gymnast",
-      //   attributes: ["id", "firstName", "userName", "lastName"],
-      //   where: {
-      //     deleted: false,
-      //   },
-      // },
     ],
     order: [["id", "DESC"]],
     limit,
     offset,
   });
 
-const getAllBookingsByGymnastId = async ({ id, limit, offset }) =>
-  await BookingsModel.findAndCountAll({
-    where: {
-      deleted: false,
-      gymnastId: id,
-    },
-    attributes: ["id", "time"],
-    include: [
-      {
-        model: UserModel,
-        attributes: ["id", "firstName", "userName", "lastName"],
-        as: "coach",
-        where: {
-          deleted: false,
-        },
-      },
-      {
-        model: UserModel,
-        as: "gymnast",
-        attributes: ["id", "firstName", "userName", "lastName"],
-        where: {
-          deleted: false,
-        },
-      },
-    ],
-    order: [["id", "DESC"]],
-    limit,
-    offset,
-  });
 const createBooking = async (data) => await BookingsModel.create({ ...data });
 
 module.exports = {
@@ -151,7 +114,6 @@ module.exports = {
   getAllBookingsByUserId,
   getBookingByCoachId,
   getBookingByCoachIdAndDate,
-  getAllBookingsByGymnastId,
   updateBookingStatus,
   getBookings,
   getBookingByChildrenIds,
