@@ -1,10 +1,10 @@
 // // localhost
 const config = {
-  host: "35.224.53.186",
+  host: "34.172.42.56",
   port: 3306,
   database: "gym",
-  username: "root",
-  password: "Password_2547422",
+  username: "gym",
+  password: "mOC%;%5dTpAUo{pT",
 };
 
 module.exports = {

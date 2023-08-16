@@ -32,6 +32,10 @@ UserModel.belongsTo(GymModel, { foreignKey: "gym_id" });
 
 GymModel.hasMany(GymScheduleModel, { foreignKey: "gym_id" });
 BookingsModel.belongsTo(UserModel, { as: "coach", foreignKey: "coach_id" });
+BookingsModel.belongsTo(Children, {
+  as: "children",
+  foreignKey: "children_id",
+});
 // BookingsModel.belongsTo(UserModel, { as: "gymnast", foreignKey: "gymnast_id" });
 
 UsersTokensModel.belongsTo(UserModel, { foreignKey: "user_id" });

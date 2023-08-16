@@ -1,4 +1,4 @@
-const { UserModel, BookingsModel, RoleModel } = require("../models");
+const { UserModel, BookingsModel, RoleModel, Children } = require("../models");
 const { Op } = require("../config").Sequelize;
 const { Sequelize } = require("../config/index");
 
@@ -39,6 +39,18 @@ const getBookingByChildrenIds = async ({ childrenId, limit, offset }) =>
         [Op.ne]: "REJECT",
       },
     },
+    include: [
+      {
+        model: UserModel,
+        attributes: ["firstName", "userName", "lastName"],
+        as: "coach",
+      },
+      {
+        model: Children,
+        attributes: ["name"],
+        as: "children",
+      },
+    ],
     raw: true,
     order: [["id", "DESC"]],
     limit,
