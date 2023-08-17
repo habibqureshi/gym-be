@@ -232,17 +232,24 @@ exports.createGymSchedule = async (req, res, next) => {
 exports.getGymSchedule = async (req, res, next) => {
   try {
     const { currentUser } = req;
+    // if (
+    //   !currentUser.roles.some(
+    //     (role) => role.name === "gym" || role.name === "admin"
+    //   )
+    // ) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "user is not a gym user or admin" });
+    // }
+    let gymId;
     if (
       !currentUser.roles.some(
-        (role) => role.name === "gym" || role.name === "admin"
+        (role) =>
+          role.name === "gym" ||
+          role.name === "gymnast" ||
+          role.name === "coach"
       )
     ) {
-      return res
-        .status(400)
-        .json({ message: "user is not a gym user or admin" });
-    }
-    let gymId;
-    if (!currentUser.roles.some((role) => role.name === "gym")) {
       const { gym } = req.query;
       if (!gym || gym === 0) {
         return res.status(400).json({ message: "gym id is required" });

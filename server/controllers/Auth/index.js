@@ -34,7 +34,11 @@ async function signIn(req, res, next) {
 
     let token = (exist && exist.token) || null;
     if (!token) {
-      console.log("generating new token for user ", user.dataValues.userName);
+      console.log(
+        "generating new token for user ",
+        user.dataValues.userName,
+        process.env.JWT_SECRET
+      );
       token = generateJWT(user.dataValues.id);
       await saveJWT(user.dataValues.userName, user.dataValues.id, token);
     }

@@ -24,6 +24,7 @@ exports.getAvailableCoach = async ({ limit, offset }) =>
       "lastName",
       "phoneNumber",
       "image",
+      "status",
     ],
     include: [
       {
