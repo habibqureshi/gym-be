@@ -167,14 +167,14 @@ function isRequestedTimeInRange(
   const bookedStartTime = new Date(bookedFrom).getTime();
   const bookedEndTime = new Date(bookedTo).getTime();
 
-  console.log(
-    "YO:",
-    requestedStartTime,
-    requestedEndTime,
-    bookedStartTime,
-    bookedEndTime,
-    "end"
-  );
+  // console.log(
+  //   "YO:",
+  //   requestedStartTime,
+  //   requestedEndTime,
+  //   bookedStartTime,
+  //   bookedEndTime,
+  //   "end"
+  // );
 
   return (
     (requestedStartTime >= bookedStartTime &&

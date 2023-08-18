@@ -205,10 +205,19 @@ exports.createGymSchedule = async (req, res, next) => {
     const fromDateOnly = new Date(from).toISOString().split("T")[0];
     console.log("from day: ", fromDateOnly);
     const exist = await existsScheduleForGymAndDate(gymId, fromDateOnly);
-    if (exist && isRequestedTimeInRange(from, to, exist.from, exist.to)) {
-      return res.status(400).json({
-        message: "Schedule for same date and time already exist for your gym",
-      });
+    // console.log(isRequestedTimeInRange(from, to, exist.from, exist.to));
+    // return;
+
+    console.log(exist);
+    if (exist && exist.length > 0) {
+      for (data of exist) {
+        if (isRequestedTimeInRange(from, to, data.from, data.to)) {
+          return res.status(400).json({
+            message:
+              "Schedule for same date and time already exist for your gym",
+          });
+        }
+      }
     }
     const status = "OPEN";
     const newSchedule = await saveSchedule({

@@ -76,7 +76,7 @@ exports.saveSchedule = async (data) =>
   });
 
 exports.existsScheduleForGymAndDate = async function (gymId, from) {
-  const existingSchedule = await GymScheduleModel.findOne({
+  const existingSchedule = await GymScheduleModel.findAll({
     where: {
       gymId: gymId,
       from: {
