@@ -14,6 +14,7 @@ const { getCityById } = require("../../services/city.service");
 const { getOffset } = require("../../utils/helpers/helper");
 const { createUser, getRoleByName } = require("../../services/auth.service");
 const { password } = require("../../config/config");
+const { isRequestedTimeInRange } = require("../../utils/validators/validators");
 
 exports.getGym = async (req, res, next) => {
   try {
@@ -204,11 +205,9 @@ exports.createGymSchedule = async (req, res, next) => {
     const fromDateOnly = new Date(from).toISOString().split("T")[0];
     console.log("from day: ", fromDateOnly);
     const exist = await existsScheduleForGymAndDate(gymId, fromDateOnly);
-    console.log("here", exist);
-    if (exist) {
+    if (exist && isRequestedTimeInRange(from, to, exist.from, exist.to)) {
       return res.status(400).json({
-        message:
-          "Schedule for your gym for day: " + fromDateOnly + " already exist",
+        message: "Schedule for same date and time already exist for your gym",
       });
     }
     const status = "OPEN";

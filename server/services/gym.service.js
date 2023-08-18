@@ -84,6 +84,7 @@ exports.existsScheduleForGymAndDate = async function (gymId, from) {
         [Sequelize.Op.lt]: from + " 23:59:59", // End of the fromDate (23:59:59 time)
       },
     },
+    raw: true,
   });
   return existingSchedule;
 };
