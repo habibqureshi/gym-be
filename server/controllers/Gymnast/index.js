@@ -12,6 +12,7 @@ const {
   saveChildren,
   getChildren,
   getAllGymnast,
+  updateChildren,
 } = require("../../services/gymnast.service");
 
 exports.coachBookingsByDate = async (req, res, next) => {
@@ -125,6 +126,56 @@ exports.getChildrenByUserId = async (req, res, next) => {
       return res.status(200).json({ result });
     }
     return res.status(400).json({ message: "No Child Found" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteChildren = async (req, res, next) => {
+  try {
+    console.log("deleting child");
+    const { currentUser } = req;
+    const { id } = req.query;
+    if (!currentUser.roles.some((role) => role.name === "gymnast")) {
+      console.log("not a gymnast");
+      return res.status(400).json({ message: "User is not a Gymnast" });
+    }
+    if (!id || id === 0) {
+      return res.status(400).json({ message: "Invalid Parameters" });
+    }
+    const data = {
+      deleted: true,
+      enable: false,
+    };
+    const result = await updateChildren(id, currentUser.dataValues.id, data);
+    if (result[0] === 1) {
+      return res.status(200).json({ message: "Child Deleted" });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateChildren = async (req, res, next) => {
+  try {
+    console.log("updating child");
+    const { currentUser } = req;
+    const { id, name } = req.body;
+    if (!currentUser.roles.some((role) => role.name === "gymnast")) {
+      console.log("not a gymnast");
+      return res.status(400).json({ message: "User is not a Gymnast" });
+    }
+    if (!id || id === 0) {
+      return res.status(400).json({ message: "Invalid Parameters" });
+    }
+    const data = {
+      name: name,
+    };
+    const result = await updateChildren(id, currentUser.dataValues.id, data);
+    console.log(result);
+    if (result[0] === 1) {
+      return res.status(200).json({ message: "Child Updated" });
+    }
   } catch (error) {
     next(error);
   }
