@@ -4,6 +4,7 @@ const {
   saveSchedule,
   getMySchedules,
   addCoachPrivateSlots,
+  updateCoachSlots,
   getPublicSlots,
   getPrivateCoach,
   getCoachSchedule,
@@ -22,7 +23,10 @@ const {
 const {
   getTimeTableByCoachIdAndType,
   getTimeTableByCoachIdAndTypeAndDate,
+  getTimeTableByCoachIdAndTypeAndDateExceptOne,
+  getTimeTableById,
 } = require("../../services/time_table.service");
+const { getBookingsByDateRange } = require("../../services/booking.service");
 const moment = require("moment");
 const e = require("express");
 
@@ -88,6 +92,159 @@ exports.getPrivateCoach = async (req, res, next) => {
 //   );
 // };
 
+exports.updateCoachSlots = async (req, res, next) => {
+  try {
+    const { currentUser } = req;
+    if (
+      !currentUser.roles.some(
+        (role) => role.name === "coach" || role.name === "admin"
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ message: "user is not a coach user or admin" });
+    }
+    const { scheduleId } = req.query;
+    if (!scheduleId || scheduleId === 0) {
+      return res.status(400).json({ message: "Invalid Schedule Id " });
+    }
+    const schedule = await getTimeTableById(scheduleId);
+    if (!schedule) {
+      return res.status(400).json({ message: "Schedule Not Found" });
+    }
+    let id;
+    let createdBy;
+    if (!currentUser.roles.some((role) => role.name === "coach")) {
+      const { coach } = req.body;
+      if (!coach || coach === 0) {
+        return res.status(400).json({ message: "coach id is required" });
+      }
+      id = coach;
+      createdBy = "ADMIN";
+    } else {
+      id = currentUser.dataValues.id;
+      createdBy = "COACH";
+      console.log("coach user");
+    }
+    const coach = await getCoachById(id);
+    const { from, to } = req.body;
+    let gym = await getGymById(coach.gymId);
+    if (!gym) {
+      return res.status(400).json({ message: "Coach Gym not found" });
+    }
+
+    const date1 = from.split(" ")[0];
+    const date2 = to.split(" ")[0];
+    if (date1 != date2) {
+      return res.status(400).json({
+        message: "please select one date",
+      });
+    }
+    const fromDateOnly = new Date(from).toISOString().split("T")[0];
+    let gymSchedule = await existsScheduleForGymAndDate(gym.id, fromDateOnly);
+    if (!gymSchedule) {
+      return res
+        .status(400)
+        .json({ message: "Gym schedule not found for requested Date" });
+    }
+    console.log("schedule", gymSchedule.length);
+    const newFrom = new Date(from).toISOString();
+    const newTo = new Date(to).toISOString();
+    console.log(newFrom, newTo);
+    if (gymSchedule.length > 0) {
+      for (data of gymSchedule) {
+        if (!isTimeInGymRange(newFrom, newTo, data.from, data.to)) {
+          return res
+            .status(400)
+            .json({ message: "selected time not in gym schedule range" });
+        }
+      }
+    }
+    let existPublicTime = await getTimeTableByCoachIdAndTypeAndDateExceptOne(
+      id,
+      "PUBLIC",
+      fromDateOnly,
+      scheduleId
+    );
+    let existPrivateTime = await getTimeTableByCoachIdAndTypeAndDateExceptOne(
+      id,
+      "PRIVATE",
+      fromDateOnly,
+      scheduleId
+    );
+    // console.log(existPrivateTime);
+    // console.log(existPublicTime);
+    // return;
+    if (existPublicTime.length > 0) {
+      for (const publicTimeSlot of existPublicTime) {
+        console.log(
+          "public overlap: ",
+          isRequestedTimeInRange(
+            from,
+            to,
+            publicTimeSlot.from,
+            publicTimeSlot.to
+          )
+        );
+
+        if (
+          isRequestedTimeInRange(
+            from,
+            to,
+            publicTimeSlot.from,
+            publicTimeSlot.to
+          )
+        ) {
+          return res.status(400).json({
+            message: "Private Slot Cannot be in time frame of Public Slot",
+          });
+        }
+      }
+    }
+    if (existPrivateTime.length > 0) {
+      for (const privateTimeSlot of existPrivateTime) {
+        console.log(
+          "private overlap: ",
+          isRequestedTimeInRange(
+            from,
+            to,
+            privateTimeSlot.from,
+            privateTimeSlot.to
+          )
+        );
+
+        if (
+          isRequestedTimeInRange(
+            from,
+            to,
+            privateTimeSlot.from,
+            privateTimeSlot.to
+          )
+        ) {
+          return res.status(400).json({
+            message: "Private Slot Cannot be in time frame of Private Slot",
+          });
+        }
+      }
+    }
+    const bookings = await getBookingsByDateRange(schedule.from, schedule.to);
+    console.log(bookings);
+    if (bookings && bookings.length > 0) {
+      return res
+        .status(400)
+        .json({ message: "Slot Cannot Update because of existing Booking" });
+    }
+    const result = await updateCoachSlots(scheduleId, from, to);
+    console.log(result);
+    if (result[0] === 1) {
+      return res.status(200).json({ message: "Coach Slot updated" });
+    }
+    return res.status(400).json({ message: "Error updating slots" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.addCoachSlots = async (req, res, next) => {
   const { currentUser } = req;
   if (
@@ -128,7 +285,6 @@ exports.addCoachSlots = async (req, res, next) => {
   if (!gym) {
     return res.status(400).json({ message: "Coach Gym not found" });
   }
-  // console.log(gym);
 
   const date1 = from.split(" ")[0];
   const date2 = to.split(" ")[0];
@@ -144,27 +300,27 @@ exports.addCoachSlots = async (req, res, next) => {
 
   let gymSchedule = await existsScheduleForGymAndDate(gym.id, fromDateOnly);
 
+  console.log(gymSchedule);
+
   if (!gymSchedule) {
     return res
       .status(400)
       .json({ message: "Gym schedule not found for requested Date" });
   }
-  console.log("schedule", gymSchedule.dataValues);
+  console.log("schedule", gymSchedule.length);
 
   const newFrom = new Date(from).toISOString();
   const newTo = new Date(to).toISOString();
 
   console.log(newFrom, newTo);
-
-  // console.log(
-  //   "gym overlap: ",
-  //   isTimeInGymRange(newFrom, newTo, gymSchedule.from, gymSchedule.to)
-  // );
-
-  if (!isTimeInGymRange(newFrom, newTo, gymSchedule.from, gymSchedule.to)) {
-    return res
-      .status(400)
-      .json({ message: "selected time not in gym schedule range" });
+  if (gymSchedule.length > 0) {
+    for (schedule of gymSchedule) {
+      if (!isTimeInGymRange(newFrom, newTo, schedule.from, schedule.to)) {
+        return res
+          .status(400)
+          .json({ message: "selected time not in gym schedule range" });
+      }
+    }
   }
 
   let existPublicTime = await getTimeTableByCoachIdAndTypeAndDate(

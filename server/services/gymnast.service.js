@@ -105,5 +105,6 @@ exports.getAllGymnast = async () => {
       },
     ],
     raw: true,
+    order: [["id", "DESC"]],
   });
 };

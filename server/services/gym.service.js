@@ -18,7 +18,7 @@ exports.getGymBySize = async ({ limit, offset }) =>
         attributes: ["id", "name"],
       },
     ],
-    order: ["id"],
+    order: [["id", "DESC"]],
     limit,
     offset,
   });
@@ -29,7 +29,7 @@ exports.getAllGym = async () =>
       deleted: false,
     },
     attributes: ["id", "name", "enable", "deleted", "createdAt", "updatedAt"],
-    order: ["id"],
+    order: [["id", "DESC"]],
     raw: true,
   });
 
@@ -75,6 +75,9 @@ exports.saveSchedule = async (data) =>
     ...data,
   });
 
+exports.updateSchedule = async (id, data) =>
+  await GymScheduleModel.update(data, { where: { id } });
+
 exports.existsScheduleForGymAndDate = async function (gymId, from) {
   const existingSchedule = await GymScheduleModel.findAll({
     where: {
@@ -94,6 +97,16 @@ exports.existsScheduleForGym = async function (gymId) {
     where: {
       gymId: gymId,
     },
+  });
+  return existingSchedule;
+};
+
+exports.existsScheduleById = async function (id) {
+  const existingSchedule = await GymScheduleModel.findOne({
+    where: {
+      id,
+    },
+    raw: true,
   });
   return existingSchedule;
 };

@@ -8,11 +8,14 @@ const {
   saveSchedule,
   existsScheduleForGymAndDate,
   existsScheduleForGym,
+  existsScheduleById,
+  updateSchedule,
 } = require("../../services/gym.service");
 const { sequelize } = require("../../config/index");
 const { getCityById } = require("../../services/city.service");
 const { getOffset } = require("../../utils/helpers/helper");
 const { createUser, getRoleByName } = require("../../services/auth.service");
+const { getScheduleByDateRange } = require("../../services/coach.service");
 const { password } = require("../../config/config");
 const { isRequestedTimeInRange } = require("../../utils/validators/validators");
 
@@ -156,6 +159,64 @@ exports.deleteGym = async (req, res, next) => {
     return res.status(201).json({
       ...transaction,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateGymSchedule = async (req, res, next) => {
+  try {
+    const { currentUser } = req;
+    if (
+      !currentUser.roles.some(
+        (role) => role.name === "gym" || role.name === "admin"
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ message: "user is not a gym user or admin" });
+    }
+    const { id } = req.query;
+    if (!id || id === 0) {
+      return res.status(200).json({ message: "Invalid Schedule ID" });
+    }
+    const gymSchedule = await existsScheduleById(id);
+    if (!gymSchedule) {
+      return res.status(400).json({ message: "Schedule not found" });
+    }
+    console.log(gymSchedule);
+
+    const { from, to } = req.body;
+    if (!from || !to) {
+      return res.status(400).json({ message: "invalid date and time" });
+    }
+    const date1 = from.split(" ")[0];
+    const date2 = to.split(" ")[0];
+    if (date1 != date2) {
+      return res.status(400).json({
+        message: "please select one date",
+      });
+    }
+    console.log(gymSchedule.gymId, gymSchedule.from, gymSchedule.to);
+    const coachTimeTable = await getScheduleByDateRange(
+      gymSchedule.gymId,
+      gymSchedule.from,
+      gymSchedule.to
+    );
+    console.log(coachTimeTable);
+    if (coachTimeTable.length > 0) {
+      return res.status(400).json({
+        message: "Cannot update becuase Coach schedule exist in this timeframe",
+      });
+    }
+    let data = {
+      from,
+      to,
+    };
+    const result = await updateSchedule(gymSchedule.id);
+    if (result[0] === 1) {
+      return res.status(200).json({ message: "Gym Scheudle Updated" });
+    }
   } catch (error) {
     next(error);
   }

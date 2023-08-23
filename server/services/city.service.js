@@ -23,6 +23,12 @@ exports.getAllCities = async () =>
       deleted: false,
     },
     attributes: ["id", "name", "enable", "deleted", "createdAt", "updatedAt"],
+    include: [
+      {
+        model: StatesModel,
+        attributes: ["id", "name"],
+      },
+    ],
     order: ["id"],
     raw: true,
   });

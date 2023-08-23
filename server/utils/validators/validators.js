@@ -167,14 +167,14 @@ function isRequestedTimeInRange(
   const bookedStartTime = new Date(bookedFrom).getTime();
   const bookedEndTime = new Date(bookedTo).getTime();
 
-  // console.log(
-  //   "YO:",
-  //   requestedStartTime,
-  //   requestedEndTime,
-  //   bookedStartTime,
-  //   bookedEndTime,
-  //   "end"
-  // );
+  console.log(
+    "YO:",
+    requestedStartTime,
+    requestedEndTime,
+    bookedStartTime,
+    bookedEndTime,
+    "end"
+  );
 
   return (
     (requestedStartTime >= bookedStartTime &&
@@ -194,6 +194,10 @@ function isTimeInGymRange(
   const requestedToDate = new Date(requestedToTime).getTime();
   const fromDate = new Date(fromTime).getTime();
   const toDate = new Date(toTime).getTime();
+  console.log(requestedFromDate);
+  console.log(requestedToDate);
+  console.log(fromDate);
+  console.log(toDate);
 
   // Check if the requested "from" time is after or equal to the "from" time of the range,
   // and if the requested "to" time is before or equal to the "to" time of the range.

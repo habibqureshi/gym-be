@@ -10,6 +10,7 @@ const {
   getTimeTableByCoachIdAndTypeAndDate,
 } = require("./time_table.service");
 const { getBookingByCoachIdAndDate } = require("./booking.service");
+const { Sequelize } = require("../config/index");
 const { Op } = require("../config").Sequelize;
 
 exports.getAvailableCoach = async ({ limit, offset }) =>
@@ -33,7 +34,7 @@ exports.getAvailableCoach = async ({ limit, offset }) =>
         required: true,
       },
     ],
-    order: ["id"],
+    order: [["id", "DESC"]],
     limit,
     offset,
   });
@@ -114,6 +115,70 @@ exports.addCoachPrivateSlots = async (
   } catch (error) {
     console.log(error);
   }
+};
+
+exports.updateCoachSlots = async (id, from, to) => {
+  try {
+    console.log("coach id: ", from, to);
+    let time = {
+      to,
+      from,
+    };
+
+    return await TimeTableModel.update(time, { where: { id } });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// exports.getScheduleByDateRange = async (id, startDate, endDate) => {
+//   const timeTable = await TimeTableModel.findAll({
+//     where: {
+//       deleted: false,
+//       from: {
+//         [Sequelize.Op.between]: [startDate, endDate],
+//       },
+//       include: [
+//         {
+//           model: UserModel,
+//           attributes: ["id", "userName"],
+//           // include: [
+//           //   {
+//           //     model: GymModel,
+//           //     attributes: ["id", "name"],
+//           //     where: {
+//           //       id,
+//           //     },
+//           //   },
+//           // ],
+//         },
+//       ],
+//     },
+//     raw: true,
+//   });
+
+exports.getScheduleByDateRange = async (gymId, startDate, endDate) => {
+  console.log(gymId, startDate, endDate);
+  const usersWithSchedules = await UserModel.findAll({
+    where: {
+      gymId, // Filter users based on the specified gym
+    },
+    include: [
+      {
+        model: TimeTableModel,
+        where: {
+          from: {
+            [Sequelize.Op.between]: [startDate, endDate],
+          },
+        },
+        // required: false, // Retrieve users even if they don't have a schedule in the given range
+      },
+    ],
+    raw: true,
+    nest: true, // Nest the schedules within the user object
+  });
+
+  return usersWithSchedules;
 };
 
 exports.getPublicSlots = async (coach) => {

@@ -76,6 +76,23 @@ const getBookingByCoachIdAndDate = async (coachId, date) => {
   return bookings;
 };
 
+const getBookingsByDateRange = async (startDate, endDate) => {
+  const bookings = await BookingsModel.findAll({
+    where: {
+      deleted: false,
+      from: {
+        [Sequelize.Op.between]: [startDate, endDate],
+      },
+      status: {
+        [Sequelize.Op.notIn]: ["REJECT", "CANCEL"],
+      },
+    },
+    raw: true,
+  });
+
+  return bookings;
+};
+
 const deleteBookingById = async (id) =>
   await BookingsModel.update(
     {
@@ -129,4 +146,5 @@ module.exports = {
   updateBookingStatus,
   getBookings,
   getBookingByChildrenIds,
+  getBookingsByDateRange,
 };

@@ -7,6 +7,7 @@ const {
   updateCity,
 } = require("../../services/city.service");
 const { getStateById } = require("../../services/states.service");
+const { sequelize } = require("../../config");
 const { getOffset } = require("../../utils/helpers/helper");
 
 exports.getCities = async (req, res, next) => {

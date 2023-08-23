@@ -6,6 +6,7 @@ const {
   updateState,
 } = require("../../services/states.service");
 const { getOffset } = require("../../utils/helpers/helper");
+const { sequelize } = require("../../config");
 
 exports.getStates = async (req, res, next) => {
   try {
