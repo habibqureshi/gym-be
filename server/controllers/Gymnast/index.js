@@ -13,6 +13,7 @@ const {
   getChildren,
   getAllGymnast,
   updateChildren,
+  updateChildrenByUserId,
 } = require("../../services/gymnast.service");
 
 exports.coachBookingsByDate = async (req, res, next) => {
@@ -136,7 +137,11 @@ exports.deleteChildren = async (req, res, next) => {
     console.log("deleting child");
     const { currentUser } = req;
     const { id } = req.query;
-    if (!currentUser.roles.some((role) => role.name === "gymnast")) {
+    if (
+      !currentUser.roles.some(
+        (role) => role.name === "gymnast" || role.name === "admin"
+      )
+    ) {
       console.log("not a gymnast");
       return res.status(400).json({ message: "User is not a Gymnast" });
     }
@@ -147,9 +152,20 @@ exports.deleteChildren = async (req, res, next) => {
       deleted: true,
       enable: false,
     };
-    const result = await updateChildren(id, currentUser.dataValues.id, data);
-    if (result[0] === 1) {
-      return res.status(200).json({ message: "Child Deleted" });
+    if (currentUser.roles.some((role) => role.name === "gymnast")) {
+      const result = await updateChildrenByUserId(
+        id,
+        currentUser.dataValues.id,
+        data
+      );
+      if (result[0] === 1) {
+        return res.status(200).json({ message: "Child Deleted" });
+      }
+    } else {
+      const result = await updateChildren(id, data);
+      if (result[0] === 1) {
+        return res.status(200).json({ message: "Child Deleted" });
+      }
     }
   } catch (error) {
     next(error);

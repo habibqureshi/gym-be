@@ -67,8 +67,11 @@ exports.getChildren = async (parentId) => {
   });
 };
 
-exports.updateChildren = async (id, userId, data) =>
+exports.updateChildrenByUserId = async (id, userId, data) =>
   await Children.update(data, { where: { id, userId } });
+
+exports.updateChildren = async (id, data) =>
+  await Children.update(data, { where: { id } });
 
 exports.getChildrenByIdAndParent = async (id, parentId) => {
   return await Children.findAll({
