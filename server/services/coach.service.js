@@ -89,6 +89,44 @@ exports.getPrivateCoach = async () =>
       "private",
       "status",
     ],
+    include: [
+      {
+        model: RoleModel,
+        attributes: ["id", "name"],
+        where: {
+          name: "COACH",
+        },
+      },
+    ],
+    raw: true,
+  });
+
+exports.getPrivateCoachByGymId = async (gymId) =>
+  await UserModel.findAll({
+    where: {
+      gymId,
+      deleted: false,
+      private: true,
+    },
+    attributes: [
+      "id",
+      "userName",
+      "firstName",
+      "lastName",
+      "phoneNumber",
+      "image",
+      "private",
+      "status",
+    ],
+    include: [
+      {
+        model: RoleModel,
+        attributes: ["id", "name"],
+        where: {
+          name: "COACH",
+        },
+      },
+    ],
     raw: true,
   });
 

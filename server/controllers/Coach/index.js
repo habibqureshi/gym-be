@@ -7,6 +7,7 @@ const {
   updateCoachSlots,
   getPublicSlots,
   getPrivateCoach,
+  getPrivateCoachByGymId,
   getCoachSchedule,
   getCoachScheduleById,
   deleteCoachScheduleById,
@@ -34,6 +35,7 @@ exports.getAllCoach = async (req, res, next) => {
   console.log("fetching all coaches");
   try {
     const { id } = req.query;
+    const { currentUser } = req;
     if (id) {
       console.log("coachID: " + id);
       const coach = await getCoachById(id);
@@ -65,7 +67,18 @@ exports.getAllCoach = async (req, res, next) => {
 exports.getPrivateCoach = async (req, res, next) => {
   try {
     console.log("getting private coaches");
-    const coaches = await getPrivateCoach();
+    const { currentUser } = req;
+    if (
+      !currentUser.roles.some(
+        (role) => role.name === "gymnast" || role.name === "admin"
+      )
+    ) {
+      return res
+        .status(400)
+        .json({ message: "user is not a gymnast user or admin" });
+    }
+    const gymId = currentUser.dataValues.gymId;
+    const coaches = await getPrivateCoachByGymId(gymId);
     if (!coaches) {
       console.log("not found");
       return res.statusCode(204); //.json({ total: coaches.count, limit, currentPage: page, message: "No Data Found" })

@@ -241,6 +241,12 @@ const createNewBooking = async (req, res, next) => {
         .json({ message: "Coach Not Allowed for Private Bookings" });
     }
 
+    if (coach.gymId != currentUser.dataValues.gymId) {
+      return res
+        .status(400)
+        .json({ message: "Selected Coach is not in your gym" });
+    }
+
     const fromDateOnly = new Date(from).toISOString().split("T")[0];
 
     let coachTimeTable = await getTimeTableByCoachIdAndTypeAndDate(
