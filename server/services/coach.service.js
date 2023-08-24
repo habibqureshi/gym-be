@@ -33,6 +33,13 @@ exports.getAvailableCoach = async ({ limit, offset }) =>
         attributes: ["id", "name"],
         required: true,
       },
+      {
+        model: RoleModel,
+        attributes: ["id", "name"],
+        where: {
+          name: "COACH",
+        },
+      },
     ],
     order: [["id", "DESC"]],
     limit,
