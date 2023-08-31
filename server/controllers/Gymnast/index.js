@@ -28,7 +28,8 @@ exports.coachBookingsByDate = async (req, res, next) => {
     }
     console.log("coachFound", date);
 
-    // const fromDateOnly = new Date(date).toISOString().split("T")[0];
+    const fromDate = new Date(from).toISOString().split(" ")[0];
+    const toDate = new Date(to).toISOString().split(" ")[0];
 
     let timeTable = await getTimeTableByCoachIdAndTypeAndDateRange(
       coachId,
@@ -40,8 +41,6 @@ exports.coachBookingsByDate = async (req, res, next) => {
     if (timeTable.length === 0) {
       return res.status(400).json({ message: "Coach Private Slot Not Found" });
     }
-    const fromDate = new Date(from).toISOString().split("T")[0];
-    const toDate = new Date(to).toISOString().split("T")[0];
     console.log(timeTable);
     let result = await getBookingByCoachIdAndDate(coachId, date);
     if (result.length > 0) {
