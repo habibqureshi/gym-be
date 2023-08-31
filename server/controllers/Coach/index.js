@@ -12,6 +12,7 @@ const {
   getCoachScheduleById,
   deleteCoachScheduleById,
 } = require("../../services/coach.service");
+const { getGymnastById } = require("../../services/gymnast.service");
 const {
   getGymById,
   existsScheduleForGymAndDate,
@@ -20,6 +21,8 @@ const { getOffset } = require("../../utils/helpers/helper");
 const {
   isRequestedTimeInRange,
   isTimeInGymRange,
+  isTimeRangeWithinRange,
+  isTimeInRange,
 } = require("../../utils/validators/validators");
 const {
   getTimeTableByCoachIdAndType,
@@ -30,21 +33,23 @@ const {
 const { getBookingsByDateRange } = require("../../services/booking.service");
 const moment = require("moment");
 const e = require("express");
+const { messaging } = require("firebase-admin");
 
 exports.getAllCoach = async (req, res, next) => {
   console.log("fetching all coaches");
   try {
     const { id } = req.query;
     const { currentUser } = req;
-    if (id) {
-      console.log("coachID: " + id);
-      const coach = await getCoachById(id);
-      if (!coach) {
-        console.log("Not Found");
-        return res.sendStatus(204); //.json({ message: "No Record Found", data: {} })
+    if (currentUser)
+      if (id) {
+        console.log("coachID: " + id);
+        const coach = await getCoachById(id);
+        if (!coach) {
+          console.log("Not Found");
+          return res.sendStatus(204); //.json({ message: "No Record Found", data: {} })
+        }
+        return res.status(200).json(coach);
       }
-      return res.status(200).json(coach);
-    }
     let { page = 1, limit = 10 } = req.query;
     limit = +limit;
     page = +page;
@@ -68,17 +73,32 @@ exports.getPrivateCoach = async (req, res, next) => {
   try {
     console.log("getting private coaches");
     const { currentUser } = req;
-    if (
-      !currentUser.roles.some(
-        (role) => role.name === "gymnast" || role.name === "admin"
-      )
-    ) {
-      return res
-        .status(400)
-        .json({ message: "user is not a gymnast user or admin" });
+    // if (
+    //   !currentUser.roles.some(
+    //     (role) => role.name === "gymnast" || role.name === "admin"
+    //   )
+    // ) {
+    //   return res
+    //     .status(400)
+    //     .json({ message: "user is not a gymnast user or admin" });
+    // }
+    let coaches, gymId;
+    if (currentUser.roles.some((role) => role.name === "gymnast")) {
+      gymId = currentUser.dataValues.gymId;
+      coaches = await getPrivateCoachByGymId(gymId);
+    } else {
+      const { gymnastId } = req.query;
+      if (!gymnastId || gymnastId === 0) {
+        return res.status(400).json({ message: "Invalid Gymnast Id" });
+      }
+      const gymnast = await getGymnastById(gymnastId);
+      if (!gymnast) {
+        return res.status(400).json({ message: "Gymnast Not Found" });
+      }
+      gymId = gymnast.gymId;
+      coaches = await getPrivateCoachByGymId(gymId);
     }
-    const gymId = currentUser.dataValues.gymId;
-    const coaches = await getPrivateCoachByGymId(gymId);
+
     if (!coaches) {
       console.log("not found");
       return res.statusCode(204); //.json({ total: coaches.count, limit, currentPage: page, message: "No Data Found" })
@@ -283,12 +303,16 @@ exports.addCoachSlots = async (req, res, next) => {
     createdBy = "COACH";
     console.log("coach user");
   }
+  const { from, to, type, timeZone } = req.body;
+  if (!from || !to || !timeZone || !type) {
+    return res.status(400).json({ message: "Invalid Parameters" });
+  }
   const coach = await getCoachById(id);
-  const { from, to, type } = req.body;
   if (!coach || !coach.gymId) {
     console.log("coach not found");
     return res.sendStatus(204);
   }
+
   if (!coach.private && type === "PRIVATE") {
     console.log("coach private bookings not allowed");
     return res.status(400).json({ message: "Private Slots not Allowed" });
@@ -298,6 +322,7 @@ exports.addCoachSlots = async (req, res, next) => {
   if (!gym) {
     return res.status(400).json({ message: "Coach Gym not found" });
   }
+  console.log("gym found here");
 
   const date1 = from.split(" ")[0];
   const date2 = to.split(" ")[0];
@@ -307,33 +332,59 @@ exports.addCoachSlots = async (req, res, next) => {
     });
   }
 
+  const fromNew = new Date(from);
   const fromDateOnly = new Date(from).toISOString().split("T")[0];
 
-  console.log("fromDate", fromDateOnly);
+  const daysOfWeek = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const dayOfWeekIndex = fromNew.getDay();
 
-  let gymSchedule = await existsScheduleForGymAndDate(gym.id, fromDateOnly);
+  const dayOfWeek = daysOfWeek[dayOfWeekIndex];
 
-  console.log(gymSchedule);
+  console.log(dayOfWeek);
 
-  if (!gymSchedule) {
+  let gymSchedule = await existsScheduleForGymAndDate(gym.id, dayOfWeek);
+
+  // console.log(gymSchedule);
+
+  if (!gymSchedule || !gymSchedule.length > 0) {
     return res
       .status(400)
       .json({ message: "Gym schedule not found for requested Date" });
   }
-  console.log("schedule", gymSchedule.length);
 
-  const newFrom = new Date(from).toISOString();
-  const newTo = new Date(to).toISOString();
+  const fromUtc = moment
+    .tz(from, timeZone)
+    .utc()
+    .format("YYYY-MM-DD HH:mm:ss")
+    .split(" ")[1];
+  const toUtc = moment
+    .tz(to, timeZone)
+    .utc()
+    .format("YYYY-MM-DD HH:mm:ss")
+    .split(" ")[1];
 
-  console.log(newFrom, newTo);
-  if (gymSchedule.length > 0) {
-    for (schedule of gymSchedule) {
-      if (!isTimeInGymRange(newFrom, newTo, schedule.from, schedule.to)) {
-        return res
-          .status(400)
-          .json({ message: "selected time not in gym schedule range" });
-      }
+  console.log(fromUtc, toUtc);
+
+  let inRange = false;
+
+  for (scheduleData of gymSchedule) {
+    if (isTimeInRange(scheduleData.from, scheduleData.to, fromUtc, toUtc)) {
+      console.log("inRange");
+      inRange = true;
+      break;
     }
+  }
+  console.log(inRange);
+  if (!inRange) {
+    return res.status(400).json({ message: "Time not in Gym schedule range" });
   }
 
   let existPublicTime = await getTimeTableByCoachIdAndTypeAndDate(
@@ -388,7 +439,14 @@ exports.addCoachSlots = async (req, res, next) => {
       }
     }
   }
-  let result = await addCoachPrivateSlots(id, from, to, type, createdBy);
+  let result = await addCoachPrivateSlots(
+    id,
+    from,
+    to,
+    type,
+    createdBy,
+    dayOfWeek
+  );
   if (result) {
     res.status(200).json({ message: "Private Slots Updated" });
   } else {

@@ -21,6 +21,7 @@ exports.getGymnastById = async (id) =>
       "phoneNumber",
       "image",
       "stripeId",
+      "gymId",
     ],
 
     include: [
@@ -70,8 +71,8 @@ exports.getChildren = async (parentId) => {
 exports.updateChildrenByUserId = async (id, userId, data) =>
   await Children.update(data, { where: { id, userId } });
 
-exports.updateChildren = async (id, data) =>
-  await Children.update(data, { where: { id } });
+exports.updateChildren = async (id, userId, data) =>
+  await Children.update(data, { where: { id, userId } });
 
 exports.getChildrenByIdAndParent = async (id, parentId) => {
   return await Children.findAll({

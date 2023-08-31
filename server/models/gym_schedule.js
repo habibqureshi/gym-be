@@ -14,15 +14,19 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: false,
       },
       from: {
-        type: DataTypes.DATE,
+        type: DataTypes.TIME,
         allowNull: false,
       },
       to: {
-        type: DataTypes.DATE,
+        type: DataTypes.TIME,
         allowNull: false,
       },
       status: {
         type: DataTypes.STRING(100),
+        allowNull: true,
+      },
+      day: {
+        type: DataTypes.STRING(45),
         allowNull: true,
       },
     },

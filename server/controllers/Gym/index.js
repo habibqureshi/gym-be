@@ -15,9 +15,19 @@ const { sequelize } = require("../../config/index");
 const { getCityById } = require("../../services/city.service");
 const { getOffset } = require("../../utils/helpers/helper");
 const { createUser, getRoleByName } = require("../../services/auth.service");
-const { getScheduleByDateRange } = require("../../services/coach.service");
+const {
+  getScheduleByDateRange,
+  futureCoachSchedules,
+} = require("../../services/coach.service");
+const { getGymnastById } = require("../../services/gymnast.service");
+const { getCoachById } = require("../../services/coach.service");
 const { password } = require("../../config/config");
-const { isRequestedTimeInRange } = require("../../utils/validators/validators");
+const {
+  isRequestedTimeInRange,
+  checkTimeOverlap,
+} = require("../../utils/validators/validators");
+const moment = require("moment");
+const momentTimezone = require("moment-timezone");
 
 exports.getGym = async (req, res, next) => {
   try {
@@ -186,34 +196,31 @@ exports.updateGymSchedule = async (req, res, next) => {
     }
     console.log(gymSchedule);
 
-    const { from, to } = req.body;
+    const { from, to, day } = req.body;
     if (!from || !to) {
       return res.status(400).json({ message: "invalid date and time" });
     }
-    const date1 = from.split(" ")[0];
-    const date2 = to.split(" ")[0];
-    if (date1 != date2) {
-      return res.status(400).json({
-        message: "please select one date",
-      });
-    }
-    console.log(gymSchedule.gymId, gymSchedule.from, gymSchedule.to);
-    const coachTimeTable = await getScheduleByDateRange(
-      gymSchedule.gymId,
-      gymSchedule.from,
-      gymSchedule.to
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    console.log(today);
+
+    const coachTimeTable = await futureCoachSchedules(
+      id,
+      today,
+      gymSchedule.day
     );
-    console.log(coachTimeTable);
+    // console.log(coachTimeTable);
     if (coachTimeTable.length > 0) {
       return res.status(400).json({
-        message: "Cannot update becuase Coach schedule exist in this timeframe",
+        message: "Cannot update becuase Coach schedule exist on this day",
       });
     }
     let data = {
       from,
       to,
     };
-    const result = await updateSchedule(gymSchedule.id);
+    const result = await updateSchedule(gymSchedule.id, data);
     if (result[0] === 1) {
       return res.status(200).json({ message: "Gym Scheudle Updated" });
     }
@@ -251,41 +258,44 @@ exports.createGymSchedule = async (req, res, next) => {
       console.log("gym user");
     }
 
-    const { from, to } = req.body;
-    if (!from || !to) {
+    const { from, to, day, timeZone } = req.body;
+    if (!from || !to || !day || !timeZone) {
       return res.status(400).json({ message: "invalid date and time" });
     }
-    const date1 = from.split(" ")[0];
-    const date2 = to.split(" ")[0];
-    if (date1 != date2) {
-      return res.status(400).json({
-        message: "please select one date",
-      });
-    }
+    console.log(from);
+    console.log(to);
+    console.log(day);
 
-    const fromDateOnly = new Date(from).toISOString().split("T")[0];
-    console.log("from day: ", fromDateOnly);
-    const exist = await existsScheduleForGymAndDate(gymId, fromDateOnly);
-    // console.log(isRequestedTimeInRange(from, to, exist.from, exist.to));
-    // return;
+    const exist = await existsScheduleForGymAndDate(gymId, day);
 
-    console.log(exist);
+    // const timeZone = "Asia/Karachi";
+    const fromUtc = moment
+      .tz(from, "HH:mm:ss", timeZone)
+      .utc()
+      .format("HH:mm:ss");
+    const toUtc = moment.tz(to, "HH:mm:ss", timeZone).utc().format("HH:mm:ss");
+
     if (exist && exist.length > 0) {
       for (data of exist) {
-        if (isRequestedTimeInRange(from, to, data.from, data.to)) {
+        // console.log(data);
+        if (checkTimeOverlap(fromUtc, toUtc, data.from, data.to)) {
+          console.log("overlap");
           return res.status(400).json({
             message:
-              "Schedule for same date and time already exist for your gym",
+              "Schedule for same day and time already exist for your gym",
           });
+        } else {
+          console.log("not overlap");
         }
       }
     }
     const status = "OPEN";
     const newSchedule = await saveSchedule({
       gymId,
-      from,
-      to,
+      from: fromUtc,
+      to: toUtc,
       status,
+      day,
     });
     if (newSchedule) {
       return res
@@ -319,11 +329,22 @@ exports.getGymSchedule = async (req, res, next) => {
           role.name === "coach"
       )
     ) {
-      const { gym } = req.query;
-      if (!gym || gym === 0) {
-        return res.status(400).json({ message: "gym id is required" });
+      const { gym, gymnastId, coachId } = req.query;
+      if (gym && gym != 0) {
+        gymId = gym;
+      } else if (gymnastId && gymnastId != 0) {
+        const gymnast = await getGymnastById(gymnastId);
+        if (!gymnast || gymnast.gymId === 0) {
+          return res.status(400).json({ message: "user gym is null" });
+        }
+        gymId = gymnast.gymId;
+      } else if (coachId && coachId != 0) {
+        const coach = await getCoachById(coachId);
+        if (!coach || coach.gymId === 0) {
+          return res.status(400).json({ message: "user gym is null" });
+        }
+        gymId = coach.gymId;
       }
-      gymId = gym;
     } else {
       if (currentUser.dataValues.gymId == 0) {
         return res.status(400).json({ message: "user gym is null" });

@@ -78,14 +78,15 @@ exports.saveSchedule = async (data) =>
 exports.updateSchedule = async (id, data) =>
   await GymScheduleModel.update(data, { where: { id } });
 
-exports.existsScheduleForGymAndDate = async function (gymId, from) {
+exports.existsScheduleForGymAndDate = async function (gymId, day) {
   const existingSchedule = await GymScheduleModel.findAll({
     where: {
       gymId: gymId,
-      from: {
-        [Sequelize.Op.gte]: from + " 00:00:00", // Start of the fromDate (00:00:00 time)
-        [Sequelize.Op.lt]: from + " 23:59:59", // End of the fromDate (23:59:59 time)
-      },
+      day,
+      // from: {
+      //   [Sequelize.Op.gte]: from + " 00:00:00", // Start of the fromDate (00:00:00 time)
+      //   [Sequelize.Op.lt]: from + " 23:59:59", // End of the fromDate (23:59:59 time)
+      // },
     },
     raw: true,
   });

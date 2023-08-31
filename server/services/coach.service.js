@@ -142,7 +142,8 @@ exports.addCoachPrivateSlots = async (
   from,
   to,
   scheduleType,
-  createdBy
+  createdBy,
+  dayOfWeek
 ) => {
   try {
     console.log("coach id: ", coach, from, to, scheduleType);
@@ -154,6 +155,7 @@ exports.addCoachPrivateSlots = async (
       deleted: false,
       coachId: coach,
       createdBy: createdBy,
+      day: dayOfWeek,
     };
 
     return await TimeTableModel.create({ ...time });
@@ -201,6 +203,29 @@ exports.updateCoachSlots = async (id, from, to) => {
 //     },
 //     raw: true,
 //   });
+
+exports.futureCoachSchedules = async (gymId, today, day) => {
+  const usersWithSchedules = await UserModel.findAll({
+    where: {
+      gymId, // Filter users based on the specified gym
+    },
+    include: [
+      {
+        model: TimeTableModel,
+        where: {
+          day,
+          from: {
+            [Op.gte]: today,
+          },
+        },
+        // required: false, // Retrieve users even if they don't have a schedule in the given range
+      },
+    ],
+    raw: true,
+    nest: true,
+  });
+  return usersWithSchedules;
+};
 
 exports.getScheduleByDateRange = async (gymId, startDate, endDate) => {
   console.log(gymId, startDate, endDate);

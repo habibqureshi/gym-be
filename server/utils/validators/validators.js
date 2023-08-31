@@ -139,6 +139,30 @@ const isTimeBetween = (currentTime, startTime, endTime) => {
   );
 };
 
+const checkTimeOverlap = (dbFrom, dbTo, reqFrom, reqTo) => {
+  const dbStartTime = new Date(`1970-01-01T${dbFrom}Z`).getTime();
+  const dbEndTime = new Date(`1970-01-01T${dbTo}Z`).getTime();
+  const reqStartTime = new Date(`1970-01-01T${reqFrom}Z`).getTime();
+  const reqEndTime = new Date(`1970-01-01T${reqTo}Z`).getTime();
+
+  return (
+    (reqStartTime >= dbStartTime && reqStartTime < dbEndTime) ||
+    (reqEndTime > dbStartTime && reqEndTime <= dbEndTime) ||
+    (reqStartTime <= dbStartTime && reqEndTime >= dbEndTime)
+  );
+};
+
+const isTimeInRange = (dbFrom, dbTo, reqFrom, reqTo) => {
+  const dbStartTime = new Date(`1970-01-01T${dbFrom}Z`).getTime();
+  const dbEndTime = new Date(`1970-01-01T${dbTo}Z`).getTime();
+  const reqStartTime = new Date(`1970-01-01T${reqFrom}Z`).getTime();
+  const reqEndTime = new Date(`1970-01-01T${reqTo}Z`).getTime();
+  // console.log(dbStartTime, dbEndTime);
+  // console.log(reqStartTime, reqEndTime);
+
+  return reqStartTime >= dbStartTime && reqEndTime <= dbEndTime;
+};
+
 function isRequestedDateTimeInRange(
   requestedFrom,
   requestedTo,
@@ -184,24 +208,38 @@ function isRequestedTimeInRange(
   );
 }
 
+const isTimeRangeWithinRange = (start1, end1, start2, end2) => {
+  const timeToMilliseconds = (timeString) => {
+    const [hours, minutes, seconds] = timeString.split(":").map(Number);
+    return (hours * 60 * 60 + minutes * 60 + seconds) * 1000;
+  };
+
+  const start1Millis = timeToMilliseconds(start1);
+  const end1Millis = timeToMilliseconds(end1);
+  const start2Millis = timeToMilliseconds(start2);
+  const end2Millis = timeToMilliseconds(end2);
+
+  return start1Millis >= start2Millis && end1Millis <= end2Millis;
+};
+
 function isTimeInGymRange(
   requestedFromTime,
   requestedToTime,
   fromTime,
   toTime
 ) {
-  const requestedFromDate = new Date(requestedFromTime).getTime();
-  const requestedToDate = new Date(requestedToTime).getTime();
-  const fromDate = new Date(fromTime).getTime();
-  const toDate = new Date(toTime).getTime();
-  console.log(requestedFromDate);
-  console.log(requestedToDate);
-  console.log(fromDate);
-  console.log(toDate);
+  // const requestedFromDate = new Date(requestedFromTime).getTime();
+  // const requestedToDate = new Date(requestedToTime).getTime();
+  // const fromDate = new Date(fromTime).getTime();
+  // const toDate = new Date(toTime).getTime();
+  console.log(requestedFromTime);
+  console.log(requestedToTime);
+  console.log(fromTime);
+  console.log(toTime);
 
   // Check if the requested "from" time is after or equal to the "from" time of the range,
   // and if the requested "to" time is before or equal to the "to" time of the range.
-  return requestedFromDate >= fromDate && requestedToDate <= toDate;
+  return requestedFromTime >= fromTime && requestedToTime <= toTime;
 }
 
 module.exports = {
@@ -212,4 +250,7 @@ module.exports = {
   isRequestedDateTimeInRange,
   isRequestedTimeInRange,
   isTimeInGymRange,
+  isTimeRangeWithinRange,
+  checkTimeOverlap,
+  isTimeInRange,
 };

@@ -48,6 +48,7 @@ const handleBearer = async ({ token, req, res, next }) => {
     if (!isTokenExist)
       return res.status(400).json({ message: "Invalid Token Found" });
     const { user } = isTokenExist;
+    console.log("here", process.env.JWT_SECRET);
     jwt.verify(token, process.env.JWT_SECRET);
     const requestedResource = `${req.method}:/${
       req.originalUrl.split("api/")[1].split("?")[0]

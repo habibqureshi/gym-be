@@ -30,6 +30,26 @@ exports.getTimeTableByCoachIdAndTypeAndDate = async (id, timeType, from) => {
   });
 };
 
+exports.getTimeTableByCoachIdAndTypeAndDateRange = async (
+  id,
+  timeType,
+  fromDate,
+  toDate
+) => {
+  return TimeTableModel.findAll({
+    where: {
+      coach_id: id,
+      type: timeType,
+      deleted: false,
+      from: {
+        [Sequelize.Op.between]: [fromDate + " 00:00:00", toDate + " 23:59:59"],
+      },
+    },
+    order: ["id"],
+    raw: true,
+  });
+};
+
 exports.getTimeTableByCoachIdAndTypeAndDateExceptOne = async (
   id,
   timeType,

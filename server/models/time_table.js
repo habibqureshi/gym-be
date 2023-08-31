@@ -18,6 +18,11 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: false,
         defaultValue: "SYSTEM",
       },
+      day: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+        defaultValue: "SYSTEM",
+      },
       from: {
         type: DataTypes.DATE,
         allowNull: false,
