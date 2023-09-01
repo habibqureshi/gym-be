@@ -235,16 +235,35 @@ const createNewBooking = async (req, res, next) => {
     if (coach === null || coach["roles.name"] != "coach") {
       return res.status(400).json({ message: "Coach Not Found" });
     }
+    let userId;
+    if (currentUser.roles.some((role) => role.name === "admin")) {
+      const { gymnastId } = req.body;
+      if (!gymnastId || gymnastId === 0) {
+        return res.status(400).json({ message: "Invalid Gymnast ID" });
+      }
+      const gymnast = await getGymnastById(gymnastId);
+      if (!gymnast) {
+        return res.status(400).json({ message: "Gymnast Not Found" });
+      }
+      if (coach.gymId != gymnast.gymId) {
+        return res
+          .status(400)
+          .json({ message: "Selected Coach is not in your gym" });
+      }
+      userId = gymnast.id;
+    } else {
+      userId = currentUser.dataValues.id;
+      if (coach.gymId != currentUser.dataValues.gymId) {
+        return res
+          .status(400)
+          .json({ message: "Selected Coach is not in your gym" });
+      }
+    }
+
     if (!coach.private) {
       return res
         .status(400)
         .json({ message: "Coach Not Allowed for Private Bookings" });
-    }
-
-    if (coach.gymId != currentUser.dataValues.gymId) {
-      return res
-        .status(400)
-        .json({ message: "Selected Coach is not in your gym" });
     }
 
     const fromDateOnly = new Date(from).toISOString().split("T")[0];

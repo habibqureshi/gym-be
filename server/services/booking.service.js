@@ -1,6 +1,7 @@
 const { UserModel, BookingsModel, RoleModel, Children } = require("../models");
 const { Op } = require("../config").Sequelize;
 const { Sequelize } = require("../config/index");
+const children = require("../models/children");
 
 const getBookingById = async (id) =>
   await BookingsModel.findOne({
@@ -51,7 +52,7 @@ const getBookingByChildrenIds = async ({ childrenId, limit, offset }) =>
         as: "children",
       },
     ],
-    raw: true,
+    // raw: true,
     order: [["id", "DESC"]],
     limit,
     offset,
@@ -65,6 +66,24 @@ const getBookingByCoachIdAndDate = async (coachId, date) => {
       from: {
         [Sequelize.Op.gte]: date + " 00:00:00", // Start of the fromDate (00:00:00 time)
         [Sequelize.Op.lt]: date + " 23:59:59", // End of the fromDate (23:59:59 time)
+      },
+      status: {
+        [Op.notIn]: ["REJECT", "CANCEL"],
+      },
+    },
+    raw: true,
+  });
+
+  return bookings;
+};
+
+const getBookingByCoachIdAndDateRange = async (coachId, startDate, endDate) => {
+  const bookings = await BookingsModel.findAll({
+    where: {
+      deleted: false,
+      coachId,
+      from: {
+        [Sequelize.Op.between]: [startDate, endDate],
       },
       status: {
         [Op.notIn]: ["REJECT", "CANCEL"],
@@ -128,6 +147,14 @@ const getAllBookingsByUserId = async ({ id, limit, offset }) =>
           deleted: false,
         },
       },
+      {
+        model: Children,
+        attributes: ["id", "name"],
+        as: "children",
+        where: {
+          deleted: false,
+        },
+      },
     ],
     order: [["id", "DESC"]],
     limit,
@@ -143,6 +170,7 @@ module.exports = {
   getAllBookingsByUserId,
   getBookingByCoachId,
   getBookingByCoachIdAndDate,
+  getBookingByCoachIdAndDateRange,
   updateBookingStatus,
   getBookings,
   getBookingByChildrenIds,

@@ -1,5 +1,6 @@
 const {
   getBookingByCoachIdAndDate,
+  getBookingByCoachIdAndDateRange,
 } = require("../../services/booking.service");
 
 const { getCoachById } = require("../../services/coach.service");
@@ -26,7 +27,7 @@ exports.coachBookingsByDate = async (req, res, next) => {
     if (!coach || !coach.private) {
       res.status(400).json({ message: "Coach Not Found" });
     }
-    console.log("coachFound", date);
+    console.log("coachFound");
 
     const fromDate = new Date(from).toISOString().split(" ")[0];
     const toDate = new Date(to).toISOString().split(" ")[0];
@@ -34,15 +35,15 @@ exports.coachBookingsByDate = async (req, res, next) => {
     let timeTable = await getTimeTableByCoachIdAndTypeAndDateRange(
       coachId,
       "PRIVATE",
-      fromDate,
-      toDate
+      from,
+      to
     );
     console.log("Timetable: ", timeTable);
     if (timeTable.length === 0) {
       return res.status(400).json({ message: "Coach Private Slot Not Found" });
     }
     console.log(timeTable);
-    let result = await getBookingByCoachIdAndDate(coachId, date);
+    let result = await getBookingByCoachIdAndDateRange(coachId, from, to);
     if (result.length > 0) {
       const bookingList = result.map((obj) => {
         const { from, to } = obj;
@@ -190,9 +191,14 @@ exports.updateChildren = async (req, res, next) => {
     console.log("updating child");
     const { currentUser } = req;
     const { id, name } = req.body;
-    if (!currentUser.roles.some((role) => role.name === "gymnast")) {
-      console.log("not a gymnast");
-      return res.status(400).json({ message: "User is not a Gymnast" });
+    let userId;
+    if (currentUser.roles.some((role) => role.name === "gymnast")) {
+      userId = currentUser.dataValues.id;
+    } else if (currentUser.roles.some((role) => role.name === "admin")) {
+      const { gymnastId } = req.body;
+      if (gymnastId || gymnastId != 0) {
+        return res.status(400).json({ message: "Gymnast ID required" });
+      }
     }
     if (!id || id === 0) {
       return res.status(400).json({ message: "Invalid Parameters" });
@@ -200,8 +206,8 @@ exports.updateChildren = async (req, res, next) => {
     const data = {
       name: name,
     };
-    console.log(currentUser.dataValues.id, name);
-    const result = await updateChildren(id, currentUser.dataValues.id, data);
+    // console.log(currentUser.dataValues.id, name);
+    const result = await updateChildren(id, userId, data);
     console.log(result);
     if (result[0] === 1) {
       return res.status(200).json({ message: "Child Updated" });
