@@ -126,6 +126,18 @@ const getBookings = async ({ id, limit, offset }) =>
       deleted: false,
       coachId: id,
     },
+    include: [
+      {
+        model: UserModel,
+        attributes: ["firstName", "userName", "lastName"],
+        as: "coach",
+      },
+      {
+        model: Children,
+        attributes: ["name"],
+        as: "children",
+      },
+    ],
     order: [["id", "DESC"]],
     limit,
     offset,
