@@ -166,6 +166,7 @@ exports.deleteChildren = async (req, res, next) => {
       enable: false,
     };
     if (currentUser.roles.some((role) => role.name === "gymnast")) {
+      console.log("gymnast user");
       const result = await updateChildrenByUserId(
         id,
         currentUser.dataValues.id,
@@ -174,8 +175,10 @@ exports.deleteChildren = async (req, res, next) => {
       if (result[0] === 1) {
         return res.status(200).json({ message: "Child Deleted" });
       }
-    } else if (currentUser.roles.some((role) => role.name === "gymnast")) {
+    } else if (currentUser.roles.some((role) => role.name === "admin")) {
+      console.log("admin user");
       const result = await updateChildren(id, data);
+      console.log("result ", result);
       if (result[0] === 1) {
         return res.status(200).json({ message: "Child Deleted" });
       }
@@ -196,9 +199,10 @@ exports.updateChildren = async (req, res, next) => {
       userId = currentUser.dataValues.id;
     } else if (currentUser.roles.some((role) => role.name === "admin")) {
       const { gymnastId } = req.body;
-      if (gymnastId || gymnastId != 0) {
+      if (!gymnastId || gymnastId === 0) {
         return res.status(400).json({ message: "Gymnast ID required" });
       }
+      userId = gymnastId;
     }
     if (!id || id === 0) {
       return res.status(400).json({ message: "Invalid Parameters" });
@@ -207,7 +211,7 @@ exports.updateChildren = async (req, res, next) => {
       name: name,
     };
     // console.log(currentUser.dataValues.id, name);
-    const result = await updateChildren(id, userId, data);
+    const result = await updateChildrenByUserId(id, userId, data);
     console.log(result);
     if (result[0] === 1) {
       return res.status(200).json({ message: "Child Updated" });
