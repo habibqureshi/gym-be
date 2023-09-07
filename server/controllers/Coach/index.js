@@ -459,9 +459,9 @@ exports.addCoachSlots = async (req, res, next) => {
     dayOfWeek
   );
   if (result) {
-    res.status(200).json({ message: "Private Slots Updated" });
+    res.status(200).json({ message: type + " Slots Updated" });
   } else {
-    res.status(400).json({ message: "Private Slots not updated" });
+    res.status(400).json({ message: type + " Slots not updated" });
   }
 };
 
