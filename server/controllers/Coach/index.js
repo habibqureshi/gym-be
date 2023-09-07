@@ -360,6 +360,9 @@ exports.addCoachSlots = async (req, res, next) => {
       .json({ message: "Gym schedule not found for requested Date" });
   }
 
+  const fromUtc = moment.tz(from, timeZone).utc().format("YYYY-MM-DD HH:mm:ss");
+  const toUtc = moment.tz(to, timeZone).utc().format("YYYY-MM-DD HH:mm:ss");
+
   const fromUtcTime = moment
     .tz(from, timeZone)
     .utc()
@@ -452,8 +455,8 @@ exports.addCoachSlots = async (req, res, next) => {
   }
   let result = await addCoachPrivateSlots(
     id,
-    from,
-    to,
+    fromUtc,
+    toUtc,
     type,
     createdBy,
     dayOfWeek
