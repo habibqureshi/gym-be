@@ -360,23 +360,33 @@ exports.addCoachSlots = async (req, res, next) => {
       .json({ message: "Gym schedule not found for requested Date" });
   }
 
-  const fromUtc = moment
+  const fromUtcTime = moment
     .tz(from, timeZone)
     .utc()
     .format("YYYY-MM-DD HH:mm:ss")
     .split(" ")[1];
-  const toUtc = moment
+  const toUtcTime = moment
     .tz(to, timeZone)
     .utc()
     .format("YYYY-MM-DD HH:mm:ss")
     .split(" ")[1];
 
-  console.log(fromUtc, toUtc);
+  console.log(
+    "timeZone time: ",
+    moment.tz(from, timeZone).utc().format("YYYY-MM-DD HH:mm:ss"),
+    moment.tz(to, timeZone).utc().format("YYYY-MM-DD HH:mm:ss")
+  );
+
+  // return;
 
   let inRange = false;
 
+  console.log(gymSchedule);
+
   for (scheduleData of gymSchedule) {
-    if (isTimeInRange(scheduleData.from, scheduleData.to, fromUtc, toUtc)) {
+    if (
+      isTimeInRange(scheduleData.from, scheduleData.to, fromUtcTime, toUtcTime)
+    ) {
       console.log("inRange");
       inRange = true;
       break;
@@ -386,6 +396,7 @@ exports.addCoachSlots = async (req, res, next) => {
   if (!inRange) {
     return res.status(400).json({ message: "Time not in Gym schedule range" });
   }
+  // return;
 
   let existPublicTime = await getTimeTableByCoachIdAndTypeAndDate(
     id,
