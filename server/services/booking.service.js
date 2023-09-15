@@ -1,6 +1,6 @@
 const { UserModel, BookingsModel, RoleModel, Children } = require("../models");
 const { Op } = require("../config").Sequelize;
-const { Sequelize } = require("../config/index");
+const { Sequelize, sequelize } = require("../config/index");
 const children = require("../models/children");
 
 const getBookingById = async (id) =>
@@ -173,7 +173,16 @@ const getAllBookingsByUserId = async ({ id, limit, offset }) =>
     offset,
   });
 
-const createBooking = async (data) => await BookingsModel.create({ ...data });
+const createBooking = async (data) => {
+  let booking = {
+    childrenId: data.childrenId,
+    coachId: data.coachId,
+    to: sequelize.literal(`'${data.toUtc}'`),
+    from: sequelize.literal(`'${data.fromUtc}'`),
+    status: "PENDING",
+  };
+  return await BookingsModel.create({ ...booking });
+};
 
 module.exports = {
   getBookingById,

@@ -10,7 +10,7 @@ const {
   getTimeTableByCoachIdAndTypeAndDate,
 } = require("./time_table.service");
 const { getBookingByCoachIdAndDate } = require("./booking.service");
-const { Sequelize } = require("../config/index");
+const { Sequelize, sequelize } = require("../config/index");
 const { Op } = require("../config").Sequelize;
 
 exports.getAvailableCoach = async ({ limit, offset }) =>
@@ -148,8 +148,8 @@ exports.addCoachPrivateSlots = async (
   try {
     console.log("coach id: ", coach, from, to, scheduleType);
     let time = {
-      to,
-      from,
+      to: sequelize.literal(`'${to}'`),
+      from: sequelize.literal(`'${from}'`),
       type: scheduleType,
       enable: true,
       deleted: false,

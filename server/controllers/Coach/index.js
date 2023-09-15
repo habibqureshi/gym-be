@@ -384,7 +384,7 @@ exports.addCoachSlots = async (req, res, next) => {
 
   let inRange = false;
 
-  console.log(gymSchedule);
+  // console.log(gymSchedule);
 
   for (scheduleData of gymSchedule) {
     if (

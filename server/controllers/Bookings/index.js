@@ -36,6 +36,7 @@ const {
 const { getOffset } = require("../../utils/helpers/helper");
 const { isRequestedTimeInRange } = require("../../utils/validators/validators");
 const { NOTIFICATION_TYPE } = require("../../utils/helpers/helper");
+const moment = require("moment");
 
 const getAllBookings = async (req, res, next) => {
   try {
@@ -218,7 +219,7 @@ const createNewBooking = async (req, res, next) => {
   try {
     console.log("New Booking", req.currentUser.userName);
     const { currentUser } = req;
-    const { to, from, coachId, childrenId } = req.body;
+    const { to, from, coachId, childrenId, timeZone } = req.body;
     if (
       coachId === currentUser.id ||
       req.currentUser.roles[0].name === "coach"
@@ -227,7 +228,7 @@ const createNewBooking = async (req, res, next) => {
         .status(400)
         .json({ message: "Can't Create Booking with self" });
     }
-    if (!(coachId || to || from || childrenId)) {
+    if (!(coachId || to || from || childrenId || timeZone)) {
       return res.status(400).json({ message: "Invalid Request Parameters" });
     }
     const coach = await getCoachById(coachId);
@@ -268,6 +269,14 @@ const createNewBooking = async (req, res, next) => {
 
     const fromDateOnly = new Date(from).toISOString().split("T")[0];
 
+    const fromUtc = moment
+      .tz(from, timeZone)
+      .utc()
+      .format("YYYY-MM-DD HH:mm:ss");
+    const toUtc = moment.tz(to, timeZone).utc().format("YYYY-MM-DD HH:mm:ss");
+
+    console.log("UTC TIME: ", from, to);
+
     let coachTimeTable = await getTimeTableByCoachIdAndTypeAndDate(
       coach.id,
       "PRIVATE",
@@ -289,27 +298,6 @@ const createNewBooking = async (req, res, next) => {
       return res.status(400).json({ message: "Child Not Found" });
     }
     console.log(child);
-
-    // let privateTimeTable = coachTimeTable.find(
-    //   (coachTimeTable) => coachTimeTable.type === "PRIVATE"
-    // );
-    // let publicTimeTable = coachTimeTable.find(
-    //   (coachTimeTable) => coachTimeTable.type === "PUBLIC"
-    // );
-
-    // if (
-    //   !isRequestedTimeInRange(
-    //     from.split(" ")[1],
-    //     to.split(" ")[1],
-    //     privateTimeTable.from,
-    //     privateTimeTable.to
-    //   )
-    // ) {
-    //   return res
-    //     .status(400)
-    //     .json({ message: "Requested time not in Coach Private Slots" });
-    // }
-
     let temp;
     if (coachTimeTable.length > 0) {
       console.log("TimeTablePrivate: ");
@@ -365,8 +353,8 @@ const createNewBooking = async (req, res, next) => {
       const newBooking = await createBooking({
         childrenId: childrenId,
         coachId,
-        to,
-        from,
+        toUtc,
+        fromUtc,
         status: "PENDING",
       });
       let message = `${currentUser.userName} has requested you for the private booking on `;
@@ -376,6 +364,7 @@ const createNewBooking = async (req, res, next) => {
         message,
         NOTIFICATION_TYPE.MY_PRIVATES
       );
+      console.log(newBooking);
       return {
         id: newBooking.dataValues.id,
         to: newBooking.to.toLocaleString("en-US", {
